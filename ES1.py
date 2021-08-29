@@ -239,17 +239,17 @@ def update_motion(m,q,r,v,E_grid,scheme,weight):
 # diagnostics
 # =============================================================================
 def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid):
-    global fig,ax1,ax2,ax3,ax4,ax8
+    global fig
     if plot_animation:    
         if t==0:
-            fig,((ax1,ax3),(ax4,ax2))=plt.subplots(2,2,figsize=(15,12))
-            ax8=ax2.twinx()
-        # clear axes
-        ax1.cla()
-        ax2.cla() 
-        ax3.cla()
-        ax4.cla()
-        ax8.cla()
+            fig=plt.figure(figsize=(15,12))
+        
+        # 
+        ax1=fig.add_subplot(221)
+        ax3=fig.add_subplot(222)
+        ax4=fig.add_subplot(223)
+        ax2=fig.add_subplot(224)
+        ax8=ax2.twinx()
         
         # labels and title
         ax1.set_xlabel('position x (m)')
@@ -296,19 +296,19 @@ def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid):
         
         # velocity distribution
         ax3.hist(v[:N//2],bins=100,range=((np.min(v),np.max(v))),
-                 color='r',orientation='horizontal')
+                  color='r',orientation='horizontal')
         ax3.hist(v[N//2:],bins=100,range=((np.min(v),np.max(v))),
-                 color='b',alpha=0.5,orientation='horizontal')
+                  color='b',alpha=0.5,orientation='horizontal')
         ax3.hist(v,bins=100,range=((np.min(v),np.max(v))),color='white',
-                 edgecolor='black',lw=1.,orientation='horizontal',histtype='step')
+                  edgecolor='black',lw=1.,orientation='horizontal',histtype='step')
         
         # density at grid positions
         ax4.plot(x,rho_grid-np.mean(rho_grid))
         # ax4.hist(r,bins=NG)
         
         plt.tight_layout()
-        fig.canvas.set_window_title('t = %.3f (s) snapshot'%T[t])
         plt.pause(0.1)
+        plt.clf()
         
         return t
     
