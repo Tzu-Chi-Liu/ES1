@@ -327,14 +327,12 @@ def history(T,E_D,E_T,E_F,P):
         ax5.legend(bbox_to_anchor=(0,1.01,1,0.2),loc='lower left'
                    ,mode='expand',borderaxespad=0.,ncol=4)
         ax5.set_title('Energy History',y=1.07)
-        fig2.canvas.set_window_title('energy')
         
         fig3,ax6=plt.subplots()
         ax6.plot(T,P-P[0])
         ax6.set_xlabel('time t (s)')
         ax6.set_ylabel('total momentum P (m/s)')
         ax6.set_title('Total Momentum Change History')
-        fig3.canvas.set_window_title('momentum')
     
     return True
 
@@ -346,7 +344,7 @@ def dispersion_relation(grid_history):
     if plot_omegak:
         # plot grid_history(x,t)
         fig4=plt.figure()
-        ax7=fig4.gca(projection='3d')
+        ax7=fig4.add_subplot(projection='3d')
         x_mesh,T_mesh=np.meshgrid(x,T)
         grid_history=np.transpose(grid_history)
         ax7.plot_surface(T_mesh,x_mesh,grid_history)
@@ -354,7 +352,6 @@ def dispersion_relation(grid_history):
         ax7.set_ylabel('position x (m)')
         ax7.set_zlabel(r'potential $\phi$ (V)')
         ax7.set_title('Field history')
-        fig4.canvas.set_window_title('field history')
         
         # FFT grid_history(x,t) to obtain grid_omegak(k,omega)
         grid_omegak=np.fft.rfft2(grid_history)
@@ -372,7 +369,6 @@ def dispersion_relation(grid_history):
         ax9.set_xlabel(r'wave number $k$ (1/m)')
         ax9.set_ylabel(r'angular frequency $\omega$ (1/s)')
         ax9.set_title(InitialCondition+' Dispersion Relation')
-        fig5.canvas.set_window_title('dispersion relation')
         ax9.imshow(np.abs(grid_omegak)[9*grid_omegak.shape[0]//10:,:]
                    ,extent=(k[0]-0.5*dk,k[-1]-0.5*dk
                             ,omega[0]-0.5*domega,omega[lenomega//10]-0.5*domega))

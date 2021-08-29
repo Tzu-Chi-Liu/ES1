@@ -1,1 +1,1 @@
-# ES1A particle-in-cell simulation## To do list - Read from input file - Save output to file- Add plotters
+# ES1A particle-in-cell simulation## To do list - Read from input file - Save output to file- Add plotters- Add serial/parallel c++ version
