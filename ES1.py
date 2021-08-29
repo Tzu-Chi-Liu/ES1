@@ -13,12 +13,12 @@ m_p                 = 2000.0     # proton mass
 # simulation parameters
 # =============================================================================
 N                   = 40000      # number of particles
-L                   = 4.0        # length of box
+L                   = 1.0        # length of box
 NG                  = 200         # number of grids
 dx=L/NG
 x=np.arange(0,L,dx)
 
-T_end               = 20.0      # total simulation time
+T_end               = 10.0      # total simulation time
 dt                  = 0.01       # time step
 T=np.arange(0,T_end,dt)
 
@@ -245,6 +245,7 @@ def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid):
             fig=plt.figure(figsize=(15,12))
         
         # 
+        plt.clf()
         ax1=fig.add_subplot(221)
         ax3=fig.add_subplot(222)
         ax4=fig.add_subplot(223)
@@ -307,8 +308,8 @@ def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid):
         # ax4.hist(r,bins=NG)
         
         plt.tight_layout()
+        plt.show()
         plt.pause(0.1)
-        plt.clf()
         
         return t
     
@@ -333,7 +334,8 @@ def history(T,E_D,E_T,E_F,P):
         ax6.set_xlabel('time t (s)')
         ax6.set_ylabel('total momentum P (m/s)')
         ax6.set_title('Total Momentum Change History')
-    
+        
+        plt.show()
     return True
 
 # =============================================================================
@@ -379,6 +381,7 @@ def dispersion_relation(grid_history):
             ax9.legend(loc='upper right')
         
         # plt.tight_layout()
+        plt.show()
     
     return omega,k,grid_omegak
 
