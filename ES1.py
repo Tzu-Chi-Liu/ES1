@@ -308,7 +308,6 @@ def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid):
         # ax4.hist(r,bins=NG)
         
         plt.tight_layout()
-        plt.show()
         plt.pause(0.1)
         
         return t
@@ -335,7 +334,6 @@ def history(T,E_D,E_T,E_F,P):
         ax6.set_ylabel('total momentum P (m/s)')
         ax6.set_title('Total Momentum Change History')
         
-        plt.show()
     return True
 
 # =============================================================================
