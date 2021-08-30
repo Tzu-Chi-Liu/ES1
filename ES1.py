@@ -18,7 +18,7 @@ NG                  = 200         # number of grids
 dx=L/NG
 x=np.arange(0,L,dx)
 
-T_end               = 10.0      # total simulation time
+T_end               = 5.0      # total simulation time
 dt                  = 0.01       # time step
 T=np.arange(0,T_end,dt)
 
@@ -245,7 +245,7 @@ def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid):
     global fig
     if plot_animation:    
         if t==0:
-            fig=plt.figure(figsize=(15,12))
+            fig=plt.figure(figsize=(16,8))
         
         # 
         plt.clf()
