@@ -30,8 +30,11 @@ InitialCondition    = 'Two Stream Instability'
 
 Tracker             = 1          # number of tracker particles
 plot_animation      = True       # plot animation of snapshots
+save_animation      = True       # save animation of snapshots
 plot_history        = True       # plot history
+save_history        = True       # save history
 plot_omegak         = True       # plot dispersion relation
+save_omegak         = True       # save dispersion relation
 plot_trajectory     = False      # plot trajectory of tracker particle(s)
 
 omega_plasma        = np.sqrt(((N/(2*L))*e_e**2)/(epsilon0*m_e))
@@ -310,6 +313,9 @@ def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid):
         plt.tight_layout()
         plt.pause(0.1)
         
+        if save_animation:
+            fig.savefig('simulation_results/Two_stream_instability/animation_'+str(t)+'.png')
+        
         return t
     
 # =============================================================================
@@ -333,6 +339,10 @@ def history(T,E_D,E_T,E_F,P):
         ax6.set_xlabel('time t (s)')
         ax6.set_ylabel('total momentum P (m/s)')
         ax6.set_title('Total Momentum Change History')
+        
+        if save_history:
+            fig2.savefig('simulation_results/Two_stream_instability/energy_history.png')
+            fig3.savefig('simulation_results/Two_stream_instability/momentum_history.png')
         
     return True
 
@@ -380,7 +390,11 @@ def dispersion_relation(grid_history):
         
         # plt.tight_layout()
         plt.show()
-    
+        
+        if save_omegak:
+            fig4.savefig('simulation_results/Two_stream_instability/field_history.png')
+            fig5.savefig('simulation_results/Two_stream_instability/dispersion_relation.png')
+            
     return omega,k,grid_omegak
 
 # =============================================================================
