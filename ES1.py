@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import os
 import datetime
 
 # =============================================================================
@@ -442,8 +443,13 @@ def save_output(m,q,r,v,phi_grid,rho_grid,E_grid,InitialCondition,specific_title
         save_dir='simulation_results/'+InitialCondition+'/'+specific_title+'/results'
     else:
         save_dir='simulation_results/'+InitialCondition+'/'+time+'/results'
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
     
-    particle_save_filename=save_dir+'/particle/'+str(t)+'.txt'
+    particle_save_dir=save_dir+'/particle'
+    if not os.path.isdir(particle_save_dir):
+        os.mkdir(particle_save_dir)
+    particle_save_filename=particle_save_dir+'/'+str(t)+'.txt'
     with open(particle_save_filename,'w') as f:
         f.write('# mass\n')
         for mass in m:
@@ -458,7 +464,10 @@ def save_output(m,q,r,v,phi_grid,rho_grid,E_grid,InitialCondition,specific_title
         for velocity in v:
             f.write(str(velocity)+'\n')
         
-    field_save_filename=save_dir+'/field/'+str(t)+'.txt'
+    field_save_dir=save_dir+'/field'
+    if not os.path.isdir(field_save_dir):
+        os.mkdir(field_save_dir)
+    field_save_filename=field_save_dir+'/'+str(t)+'.txt'
     with open(field_save_filename,'w') as f:
         f.write('# rho_grid\n')
         for rho in rho_grid:
