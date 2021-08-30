@@ -1,1 +1,1 @@
-# ES1A particle-in-cell simulation## To do list - Read from input file - Save output to file- Add plotters- Add serial/parallel c++ version
+# ES1A particle-in-cell simulation## To do list - on/off for plt.show()- Read from input file - Save output to file- Add plotters- Add serial/parallel c++ versionDon't modify .py and .cpp for input and parameters

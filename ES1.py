@@ -1,42 +1,77 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+import datetime
+
+# =============================================================================
+# Load input file into parameters dict & save to same dir as input file
+# =============================================================================
+input_file_loc=sys.argv[1]
+specific_title=input_file_loc.split('/')[2]
+time='#'+datetime.datetime.now().strftime('%Y%m%d%H%M')
+# input_file_loc='simulation_results/Two_stream_instability/test/input.txt'
+print('Input file location:',input_file_loc,'\n')
+
+with open(input_file_loc) as f:
+    text=f.read().splitlines()
+text=[line for line in text if not line.startswith('#')]
+text=[line for line in text if not line=='']
+text=[[line.replace(' ','').split('=')[0],line.replace(' ','').split('=')[1].split('#')[0]] 
+      for line in text]
+
+parameters={}
+for line in text:
+    parameters[line[0]]=line[1]
 
 # =============================================================================
 # physical constants
 # =============================================================================
-e_e                 = 5e-2       # elementary charge
-epsilon0            = 1.0        # vacuum permittivity
-m_e                 = 1.0        # electron mass
-m_p                 = 2000.0     # proton mass
+e_e                 = float(parameters['e_e'])     # elementary charge
+epsilon0            = float(parameters['epsilon0'])        # vacuum permittivity
+m_e                 = float(parameters['m_e'])        # electron mass
+m_p                 = float(parameters['m_p'])     # proton mass
 
 # =============================================================================
-# simulation parameters
+# Boundary & initial (physical) conditions
 # =============================================================================
-N                   = 40000      # number of particles
-L                   = 1.0        # length of box
-NG                  = 200         # number of grids
-dx=L/NG
-x=np.arange(0,L,dx)
+N                   = int(parameters['N'])      # number of particles
+L                   = float(parameters['L'])        # length of box
 
-T_end               = 5.0      # total simulation time
-dt                  = 0.01       # time step
-T=np.arange(0,T_end,dt)
+density             = float(parameters['density'])       # not sure to input or calculate
 
-weight              = 'CIC'
-scheme              = 'leapfrog'
-solver              = 'FFT'
+InitialCondition    = parameters['InitialCondition']
+v0                  = float(parameters['v0'])        # Velocity
+v0_sigma            = float(parameters['v0_sigma'])        # Velocity width
+A                   = float(parameters['A'])       # Sinusoidal perturbation amplitude
+Mode                = int(parameters['Mode'])          # Sinusoidal perturbation wavevector 
 
-InitialCondition    = 'Two Stream Instability'
+# =============================================================================
+# Simulation (unphysical) parameters
+# =============================================================================
+NG                  = int(parameters['NG'])         # number of grids
 
-Tracker             = 1          # number of tracker particles
-plot_animation      = True       # plot animation of snapshots
-save_animation      = True       # save animation of snapshots
-plot_history        = True       # plot history
-save_history        = True       # save history
-plot_omegak         = True       # plot dispersion relation
-save_omegak         = True       # save dispersion relation
-plot_trajectory     = False      # plot trajectory of tracker particle(s)
+T_end               = float(parameters['T_end'])       # Total simulation time
+dt                  = float(parameters['dt'])       # Time step
 
+weight              = parameters['weight']
+scheme              = parameters['scheme']
+solver              = parameters['solver']
+
+# =============================================================================
+# Analysis parameters
+# =============================================================================
+Tracker             = int(parameters['Tracker'])          # Number of tracker particles
+plot_animation      = bool(parameters['plot_animation'])       # Plot animation of snapshots
+save_animation      = bool(parameters['save_animation'])       # save animation of snapshots
+plot_history        = bool(parameters['plot_history'])       # Plot history
+save_history        = bool(parameters['save_history'])       # save history
+plot_omegak         = bool(parameters['plot_omegak'])       # Plot dispersion relation
+save_omegak         = bool(parameters['save_omegak'])       # save dispersion relation
+plot_trajectory     = bool(parameters['plot_trajectory'])      # Plot trajectory of tracker particle(s)
+
+dx                  = L/NG
+x                   = np.arange(0,L,dx)
+T                   = np.arange(0,T_end,dt)
 omega_plasma        = np.sqrt(((N/(2*L))*e_e**2)/(epsilon0*m_e))
 print('Assuming half of N are electrons, other half are protons,\n'+
       'plasma frequency = %.4f (s^{-1}),\nomega_plasma*dt = %.4f, total steps = %i'
@@ -83,7 +118,7 @@ if InitialCondition=='Plasma Oscillation':
     
     # r[15*N//64:17*N//64]+=A/(n0)
 
-if InitialCondition=='Two Stream Instability':
+if InitialCondition=='Two_Stream_Instability':
     v0         = 1.0        # velocity
     v0_sigma   = 0.1        # velocity width
     A          = 0.01       # sinusoidal perturbation amplitude
@@ -398,6 +433,44 @@ def dispersion_relation(grid_history):
     return omega,k,grid_omegak
 
 # =============================================================================
+# save output to file
+# =============================================================================
+def save_output(m,q,r,v,phi_grid,rho_grid,E_grid,InitialCondition,specific_title,time):
+# Save m,q,r(t),v(t),phi(t),rho(t),E(t)
+    global t
+    if specific_title!='':
+        save_dir='simulation_results/'+InitialCondition+'/'+specific_title+'/results'
+    else:
+        save_dir='simulation_results/'+InitialCondition+'/'+time+'/results'
+    
+    particle_save_filename=save_dir+'/particle/'+str(t)+'.txt'
+    with open(particle_save_filename,'w') as f:
+        f.write('# mass\n')
+        for mass in m:
+            f.write(str(mass)+'\n')
+        f.write('\n# charge\n')
+        for charge in q:
+            f.write(str(charge)+'\n')
+        f.write('\n# position\n')
+        for position in r:
+            f.write(str(position)+'\n')
+        f.write('\n# velocity\n')
+        for velocity in v:
+            f.write(str(velocity)+'\n')
+        
+    field_save_filename=save_dir+'/field/'+str(t)+'.txt'
+    with open(field_save_filename,'w') as f:
+        f.write('# rho_grid\n')
+        for rho in rho_grid:
+            f.write(str(rho)+'\n')
+        f.write('\n# phi_grid\n')
+        for phi in phi_grid:
+            f.write(str(phi)+'\n')
+        f.write('\n# E_grid\n')
+        for E in E_grid:
+            f.write(str(E)+'\n')
+            
+# =============================================================================
 # main simulation loop
 # =============================================================================
 for t in range(len(T)):
@@ -422,6 +495,9 @@ for t in range(len(T)):
     E_D[t]=np.sum(0.5*m*v*v_old)
     grid_history[:,t]=E_grid
         
+    # save output
+    save_output(m,q,r,v,phi_grid,rho_grid,E_grid,InitialCondition,specific_title,time)
+    
 # history
 history(T,E_D,E_T,E_F,P)
 
