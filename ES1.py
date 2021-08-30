@@ -7,10 +7,10 @@ import datetime
 # =============================================================================
 # Load input file into parameters dict & save to same dir as input file
 # =============================================================================
-input_file_loc=sys.argv[1]
+# input_file_loc=sys.argv[1] # For running in terminal
+input_file_loc='simulation_results/Two_stream_instability/test/input.txt' # for running in IDE (ex:Spyder)
 specific_title=input_file_loc.split('/')[2]
 time='#'+datetime.datetime.now().strftime('%Y%m%d%H%M')
-# input_file_loc='simulation_results/Two_stream_instability/test/input.txt'
 print('Input file location:',input_file_loc,'\n')
 
 with open(input_file_loc) as f:
@@ -23,6 +23,13 @@ text=[[line.replace(' ','').split('=')[0],line.replace(' ','').split('=')[1].spl
 parameters={}
 for line in text:
     parameters[line[0]]=line[1]
+
+save_dir=input_file_loc.split('/')[0]+'/'+input_file_loc.split('/')[1]\
+         +'/'+input_file_loc.split('/')[2]+'/results'
+# save_dir=input_file_loc.split('/')[0]+'/'+input_file_loc.split('/')[1]\
+#          +'/'+time+'/results'
+if not os.path.isdir(save_dir):
+    os.mkdir(save_dir)
 
 # =============================================================================
 # physical constants
@@ -75,7 +82,7 @@ x                   = np.arange(0,L,dx)
 T                   = np.arange(0,T_end,dt)
 omega_plasma        = np.sqrt(((N/(2*L))*e_e**2)/(epsilon0*m_e))
 print('Assuming half of N are electrons, other half are protons,\n'+
-      'plasma frequency = %.4f (s^{-1}),\nomega_plasma*dt = %.4f, total steps = %i'
+      'plasma frequency = %.4f (s^{-1}),\nomega_plasma*dt = %.4f, total steps = %i\n'
       %(omega_plasma,omega_plasma*dt,int(T_end/dt)))
 
 # =============================================================================
@@ -125,7 +132,7 @@ if InitialCondition=='Two_Stream_Instability':
     A          = 0.01       # sinusoidal perturbation amplitude
     k          = 2.*np.pi/L # sinusoidal perturbation wavevector 
     
-    m=np.ones(N)*m_e
+    m=np.ones(N)*m_e 
     q=-1*np.ones(N)*e_e
     # q[N//2:]*=-1.
     r=np.random.random(N)*L
@@ -277,7 +284,7 @@ def update_motion(m,q,r,v,E_grid,scheme,weight):
 # =============================================================================
 # diagnostics
 # =============================================================================
-def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid):
+def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid,save_dir):
     global fig
     if plot_animation:    
         if t==0:
@@ -350,14 +357,17 @@ def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid):
         plt.pause(0.1)
         
         if save_animation:
-            fig.savefig('simulation_results/Two_stream_instability/animation_'+str(t)+'.png')
+            animation_save_dir=save_dir+'/animation/'
+            if not os.path.isdir(animation_save_dir):
+                os.mkdir(animation_save_dir)
+            fig.savefig(animation_save_dir+str(t)+'.png')
         
         return t
     
 # =============================================================================
 # history
 # =============================================================================
-def history(T,E_D,E_T,E_F,P):
+def history(T,E_D,E_T,E_F,P,save_dir):
     if plot_history:
         fig2,ax5=plt.subplots()
         ax5.plot(T,E_D,label='drift')
@@ -377,15 +387,15 @@ def history(T,E_D,E_T,E_F,P):
         ax6.set_title('Total Momentum Change History')
         
         if save_history:
-            fig2.savefig('simulation_results/Two_stream_instability/energy_history.png')
-            fig3.savefig('simulation_results/Two_stream_instability/momentum_history.png')
+            fig2.savefig(save_dir+'/energy_history.png')
+            fig3.savefig(save_dir+'/momentum_history.png')
         
     return True
 
 # =============================================================================
 # dispersion relation
 # =============================================================================
-def dispersion_relation(grid_history):
+def dispersion_relation(grid_history,save_dir):
     global x,T
     if plot_omegak:
         # plot grid_history(x,t)
@@ -428,23 +438,17 @@ def dispersion_relation(grid_history):
         plt.show()
         
         if save_omegak:
-            fig4.savefig('simulation_results/Two_stream_instability/field_history.png')
-            fig5.savefig('simulation_results/Two_stream_instability/dispersion_relation.png')
+            fig4.savefig(save_dir+'/field_history.png')
+            fig5.savefig(save_dir+'/dispersion_relation.png')
             
     return omega,k,grid_omegak
 
 # =============================================================================
 # save output to file
 # =============================================================================
-def save_output(m,q,r,v,phi_grid,rho_grid,E_grid,InitialCondition,specific_title,time):
+def save_output(m,q,r,v,phi_grid,rho_grid,E_grid,save_dir):
 # Save m,q,r(t),v(t),phi(t),rho(t),E(t)
     global t
-    if specific_title!='':
-        save_dir='simulation_results/'+InitialCondition+'/'+specific_title+'/results'
-    else:
-        save_dir='simulation_results/'+InitialCondition+'/'+time+'/results'
-    if not os.path.isdir(save_dir):
-        os.mkdir(save_dir)
     
     particle_save_dir=save_dir+'/particle'
     if not os.path.isdir(particle_save_dir):
@@ -488,7 +492,7 @@ for t in range(len(T)):
     k,rho_k,phi_k=solve_poisson(r,q,weight)[3:6]
     
     v_old=np.copy(v)
-    diagnostics_animation(r,0.5*(v_old+v),phi_grid,E_grid,rho_grid)
+    diagnostics_animation(r,0.5*(v_old+v),phi_grid,E_grid,rho_grid,save_dir)
     
     # update particle i velocity v[i] and position r[i] at time t
     for i in range(N):
@@ -505,10 +509,10 @@ for t in range(len(T)):
     grid_history[:,t]=E_grid
         
     # save output
-    save_output(m,q,r,v,phi_grid,rho_grid,E_grid,InitialCondition,specific_title,time)
+    save_output(m,q,r,v,phi_grid,rho_grid,E_grid,save_dir)
     
 # history
-history(T,E_D,E_T,E_F,P)
+history(T,E_D,E_T,E_F,P,save_dir)
 
 # dispersion relation
-omega,k,grid_omegak=dispersion_relation(grid_history)
+omega,k,grid_omegak=dispersion_relation(grid_history,save_dir)
