@@ -69,13 +69,14 @@ solver              = parameters['solver']
 # Analysis parameters
 # =============================================================================
 Tracker             = int(parameters['Tracker'])          # Number of tracker particles
-plot_animation      = bool(parameters['plot_animation'])       # Plot animation of snapshots
-save_animation      = bool(parameters['save_animation'])       # save animation of snapshots
-plot_history        = bool(parameters['plot_history'])       # Plot history
-save_history        = bool(parameters['save_history'])       # save history
-plot_omegak         = bool(parameters['plot_omegak'])       # Plot dispersion relation
-save_omegak         = bool(parameters['save_omegak'])       # save dispersion relation
-plot_trajectory     = bool(parameters['plot_trajectory'])      # Plot trajectory of tracker particle(s)
+save_output         = bool(int(parameters['save_output']))
+plot_animation      = bool(int(parameters['plot_animation']))  # Plot animation of snapshots
+save_animation      = bool(int(parameters['save_animation']))      # save animation of snapshots
+plot_history        = bool(int(parameters['plot_history']))       # Plot history
+save_history        = bool(int(parameters['save_history']))       # save history
+plot_omegak         = bool(int(parameters['plot_omegak']))       # Plot dispersion relation
+save_omegak         = bool(int(parameters['save_omegak']))       # save dispersion relation
+plot_trajectory     = bool(int(parameters['plot_trajectory']))      # Plot trajectory of tracker particle(s)
 
 dx                  = L/NG
 x                   = np.arange(0,L,dx)
@@ -95,7 +96,7 @@ if InitialCondition=='Particle Pair Oscillation':
     r=np.array([L/4.,2*L/4.])
     v=np.array([0.,0.])
     
-if InitialCondition=='Plasma Oscillation':
+if InitialCondition=='Plasma_Oscillation':
     A          = 1e-5
     v0         = 1.         # velocity
     k          = 2.*np.pi/L # velocity wavenumber 
@@ -110,9 +111,12 @@ if InitialCondition=='Plasma Oscillation':
     r=np.append(np.linspace(0,L,N//2),np.linspace(0,L,N//2))
     v=np.append(np.random.normal(0,v0_sigma,size=(1,N//2)),np.zeros(N//2))
     
+    # Galilean transformation
+    # v+=v0_sigma
+    
     # sinusoidal perturbation
-    r[:N//2]+=A/(n0*k)*np.sin(k*r[:N//2])
-    r=r%L
+    # r[:N//2]+=A/(n0*k)*np.sin(k*r[:N//2])
+    # r=r%L
     
     # excite all modes
     # for i in range(1,NG//2+1):
@@ -120,9 +124,9 @@ if InitialCondition=='Plasma Oscillation':
     # r=r%L
     
     # excite first few modes
-    # for i in range(1,51):
-    #     r[:N//2]+=A/(n0)*np.sin(i*k*r[:N//2])
-    # r=r%L
+    for i in range(1,30):
+        r[:N//2]+=A*i/(n0)*np.sin(i*k*r[:N//2])
+    r=r%L
     
     # r[15*N//64:17*N//64]+=A/(n0)
 
@@ -139,9 +143,12 @@ if InitialCondition=='Two_Stream_Instability':
     # v=np.random.normal(v0,v0_sigma,size=(1,N))[0]
     # v[N//2:]*=-1.
     v=np.append(np.random.normal(v0,v0_sigma,size=(1,N//2)),
-                np.random.normal(-v0,v0_sigma,size=(1,N//2)))
-    # v+=A*np.sin(k*r) # add perturbation
-
+                np.random.normal(v0,v0_sigma,size=(1,N//2)))
+    
+    # add perturbation
+    # r+=1e-5/(0.5*N/L*k)*np.sin(k*r) 
+    # r=r%L
+    
 if InitialCondition=='Single Beam':
     v0         = 1.0        # velocity
     v0_sigma   = 0.0        # velocity width
@@ -167,7 +174,9 @@ E_D   = np.zeros(len(T)) # drift kinetic energy
 E_T   = np.zeros(len(T)) # thermal kinetic energy
 E_F   = np.zeros(len(T)) # field energy
 
-grid_history = np.zeros((NG,len(T)))
+rho_grid_history = np.zeros((NG,len(T)))
+phi_grid_history = np.zeros((NG,len(T)))
+E_grid_history   = np.zeros((NG,len(T)))
 
 # =============================================================================
 # external fields
@@ -446,7 +455,7 @@ def dispersion_relation(grid_history,save_dir):
 # =============================================================================
 # save output to file
 # =============================================================================
-def save_output(m,q,r,v,phi_grid,rho_grid,E_grid,save_dir):
+def output_to_file(m,q,r,v,phi_grid,rho_grid,E_grid,save_dir):
 # Save m,q,r(t),v(t),phi(t),rho(t),E(t)
     global t
     
@@ -506,13 +515,16 @@ for t in range(len(T)):
     E_F[t]=0.5*np.dot(phi_grid*dx,rho_grid)
     P[t]=np.sum(m*0.5*(v_old+v))
     E_D[t]=np.sum(0.5*m*v*v_old)
-    grid_history[:,t]=E_grid
+    rho_grid_history[:,t]=rho_grid
+    phi_grid_history[:,t]=phi_grid
+    E_grid_history[:,t]=E_grid
         
     # save output
-    save_output(m,q,r,v,phi_grid,rho_grid,E_grid,save_dir)
+    if save_output:
+        output_to_file(m,q,r,v,phi_grid,rho_grid,E_grid,save_dir)
     
 # history
 history(T,E_D,E_T,E_F,P,save_dir)
 
 # dispersion relation
-omega,k,grid_omegak=dispersion_relation(grid_history,save_dir)
+omega,k,grid_omegak=dispersion_relation(E_grid_history,save_dir)
