@@ -10,30 +10,30 @@ m_p                 = 2000.0     # Proton mass
 # Boundary & initial (physical) conditions
 # =============================================================================
 N                   = 40000      # Number of particles
-L                   = 128.0      # Length of box
+L                   = 1.0      # Length of box
 
 density             = 10.0       # not sure to input or calculate
 
-InitialCondition    = Plasma_Oscillation
-A                   = 0.1        # Perturbation amplitude
-Modes               = 1:50       # Excited modes (seperate by comma or i:j for modes = list(range(i,j)))
-v_sigma             = 0.0        # Velocity width (v0_sigma**2 ~ Temperature)
-v_gt                = 1.0        # Galilean transformation velocity
+# InitialCondition    = Plasma_Oscillation
+# A                   = 0.1        # Perturbation amplitude
+# Modes               = 1     # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
+# v_sigma             = 0.0        # Velocity width (v0_sigma**2 ~ Temperature)
+# v_gt                = 0.0        # Galilean transformation velocity
 
-# InitialCondition    = Two_Stream_Instability
-# v0                  = 1.0        # Velocity
-# v0_sigma            = 0.1        # Velocity width
-# charge              = same       # 'same' for q1q2>0 and 'opposite' for q1q2<0
-# A                   = 0.0        # Sinusoidal perturbation amplitude
-# Modes               = 0          # Sinusoidal perturbation wavevector 
+InitialCondition    = Two_Stream_Instability
+v0                  = 1.0        # Velocity
+v0_sigma            = 0.1        # Velocity width
+charge              = same       # 'same' for q1q2>0 and 'opposite' for q1q2<0
+A                   = 0.0        # Sinusoidal perturbation amplitude
+Modes               = 0          # Sinusoidal perturbation wavevector 
 
 # =============================================================================
 # Simulation (unphysical) parameters
 # =============================================================================
 NG                  = 128        # Number of grids
 
-T_end               = 100.0        # Total simulation time
-dt                  = 0.1       # Time step
+T_end               = 10.0        # Total simulation time
+dt                  = 0.01       # Time step
 
 weight              = CIC
 scheme              = leapfrog

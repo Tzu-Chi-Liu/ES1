@@ -8,7 +8,7 @@ import datetime
 # Load input file into parameters dict & save to same dir as input file
 # =============================================================================
 # input_file_loc=sys.argv[1] # For running in terminal
-input_file_loc='simulation_results/Two_stream_instability/test/input.txt' # for running in IDE (ex:Spyder)
+input_file_loc='simulation_results/example_input_file/input.txt' # for running in IDE (ex:Spyder)
 specific_title=input_file_loc.split('/')[2]
 time='#'+datetime.datetime.now().strftime('%Y%m%d%H%M')
 print('Input file location:',input_file_loc,'\n')
@@ -28,7 +28,7 @@ save_dir=input_file_loc.split('/')[0]+'/'+input_file_loc.split('/')[1]\
          +'/'+input_file_loc.split('/')[2]+'/results'
 # save_dir=input_file_loc.split('/')[0]+'/'+input_file_loc.split('/')[1]\
 #          +'/'+time+'/results'
-if not os.path.isdir(save_dir):
+if (not os.path.isdir(save_dir)) and input_file_loc.split('/')[1]!='example_input_file':
     os.mkdir(save_dir)
 
 # =============================================================================
@@ -72,14 +72,14 @@ plot_history        = bool(int(parameters['plot_history']))       # Plot history
 save_history        = bool(int(parameters['save_history']))       # save history
 plot_omegak         = bool(int(parameters['plot_omegak']))       # Plot dispersion relation
 save_omegak         = bool(int(parameters['save_omegak']))       # save dispersion relation
-plot_trajectory     = bool(int(parameters['plot_trajectory']))      # Plot trajectory of tracker particle(s)
+plot_trajectory     = bool(int(parameters['plot_trajectory']))  # Trajectory of tracker particle(s)
 
 # =============================================================================
 # Derived parameters 
 # =============================================================================
 dx                  = L/NG # grid spacing
 x                   = np.arange(0,L,dx) # np array for x axis
-k                   = 2.*np.pi/L  # wave number for first mode 
+k_1                 = 2.*np.pi/L  # wave number for first mode 
 T                   = np.arange(0,T_end,dt) # np array for time axis
 # density             = N/L      # not sure to input or calculate
 omega_plasma        = np.sqrt(((N/(2*L))*e_e**2)/(epsilon0*m_e)) # plasma frequency
@@ -91,17 +91,19 @@ print('Assuming half of N are electrons, other half are protons,\n'+
 # =============================================================================
 # initial conditions
 # =============================================================================
-# if parameters['InitialCondition']=='Particle Pair Oscillation':
+# if InitialCondition=='Particle Pair Oscillation':
 #     N=2
 #     m=np.array([m_e,m_e])
 #     q=np.array([e_e,-e_e])
 #     r=np.array([L/4.,2*L/4.])
 #     v=np.array([0.,0.])
         
-if parameters['InitialCondition']=='Plasma_Oscillation':
+if InitialCondition=='Plasma_Oscillation':
     A          = float(parameters['A'])
     if ':' in parameters['Modes']:
-        modes  = list(range(parameters['Modes'].split(':')[0],parameters['Modes'].split(':')[1]))
+        modes  = list(range(int(parameters['Modes'].split(':')[0]),
+                            int(parameters['Modes'].split(':')[1]),
+                            int(parameters['Modes'].split(':')[2])))
     else:
         modes  = [int(mode) for mode in parameters['Modes'].split(',')]
     v_sigma   = float(parameters['v_sigma'])
@@ -121,16 +123,18 @@ if parameters['InitialCondition']=='Plasma_Oscillation':
     
     # excite mode in modes list
     for mode in modes:
-        r[:N//2]+=A*mode/n0*np.sin(mode*k*r[:N//2])
+        r[:N//2]+=A*mode/n0*np.sin(mode*k_1*r[:N//2])
     r=r%L
 
-if parameters['InitialCondition']=='Two_Stream_Instability':
+if InitialCondition=='Two_Stream_Instability':
     v0         = float(parameters['v0'])        # velocity
     v0_sigma   = float(parameters['v0_sigma'])        # velocity width
     charge     = parameters['charge']
     A          = float(parameters['A'])
     if ':' in parameters['Modes']:
-        modes  = list(range(parameters['Modes'].split(':')[0],parameters['Modes'].split(':')[1]))
+        modes  = list(range(int(parameters['Modes'].split(':')[0]),
+                            int(parameters['Modes'].split(':')[1]),
+                            int(parameters['Modes'].split(':')[2])))
     else:
         modes  = [int(mode) for mode in parameters['Modes'].split(',')]
     
@@ -143,10 +147,10 @@ if parameters['InitialCondition']=='Two_Stream_Instability':
                 np.random.normal(-v0,v0_sigma,size=(1,N//2)))
     
     for mode in modes:
-        r[:N//2]+=A*mode/density*np.sin(mode*k*r[:N//2])
+        r[:N//2]+=A*mode/density*np.sin(mode*k_1*r[:N//2])
     r=r%L
     
-# if parameters['InitialCondition']=='Single Beam':
+# if InitialCondition=='Single Beam':
 #     v0         = 1.0        # velocity
 #     v0_sigma   = 0.0        # velocity width
 #     A          = 0.01       # sinusoidal perturbation amplitude
