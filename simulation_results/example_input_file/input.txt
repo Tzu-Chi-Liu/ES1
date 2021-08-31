@@ -11,18 +11,19 @@ m_p                 = 2000.0     # Proton mass
 # =============================================================================
 N                   = 40000      # Number of particles
 L                   = 1.0      # Length of box
+T_end               = 5.0       # Total simulation time
 
 density             = 10.0       # not sure to input or calculate
 
 # InitialCondition    = Plasma_Oscillation
 # A                   = 0.1        # Perturbation amplitude
-# Modes               = 1     # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
+# Modes               = 1          # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
 # v_sigma             = 0.0        # Velocity width (v0_sigma**2 ~ Temperature)
 # v_gt                = 0.0        # Galilean transformation velocity
 
 InitialCondition    = Two_Stream_Instability
 v0                  = 1.0        # Velocity
-v0_sigma            = 0.1        # Velocity width
+v0_sigma            = 0.0        # Velocity width
 charge              = same       # 'same' for q1q2>0 and 'opposite' for q1q2<0
 A                   = 0.0        # Sinusoidal perturbation amplitude
 Modes               = 0          # Sinusoidal perturbation wavevector 
@@ -30,9 +31,7 @@ Modes               = 0          # Sinusoidal perturbation wavevector
 # =============================================================================
 # Simulation (unphysical) parameters
 # =============================================================================
-NG                  = 128        # Number of grids
-
-T_end               = 10.0        # Total simulation time
+NG                  = 64        # Number of grids
 dt                  = 0.01       # Time step
 
 weight              = CIC
@@ -43,11 +42,12 @@ solver              = FFT
 # Analysis parameters
 # =============================================================================
 Tracker             = 1          # Number of tracker particles
-save_output         = 0      # Save output to txt file
-plot_animation      = 0      # Plot animation of snapshots
-save_animation      = 0      # save animation of snapshots
-plot_history        = 1       # Plot history
-save_history        = 0      # save history
-plot_omegak         = 1       # Plot dispersion relation
-save_omegak         = 0      # save dispersion relation
-plot_trajectory     = 0      # Plot trajectory of tracker particle(s)
+save_output         = 0          # Save output to txt file
+plot_animation      = 0          # Plot animation of snapshots
+save_animation      = 0          # save animation of snapshots
+plot_history        = 1          # Plot history
+save_history        = 0          # save history
+plot_mode_evolution = 1,2,5,20   # plot field(k,t)
+plot_omegak         = 1          # Plot dispersion relation
+save_omegak         = 0          # save dispersion relation
+plot_trajectory     = 0          # Plot trajectory of tracker particle(s)

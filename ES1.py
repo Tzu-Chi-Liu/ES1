@@ -70,6 +70,7 @@ plot_animation      = bool(int(parameters['plot_animation']))  # Plot animation 
 save_animation      = bool(int(parameters['save_animation']))      # save animation of snapshots
 plot_history        = bool(int(parameters['plot_history']))       # Plot history
 save_history        = bool(int(parameters['save_history']))       # save history
+plot_mode_evolution = [int(mode) for mode in parameters['plot_mode_evolution'].split(',')]
 plot_omegak         = bool(int(parameters['plot_omegak']))       # Plot dispersion relation
 save_omegak         = bool(int(parameters['save_omegak']))       # save dispersion relation
 plot_trajectory     = bool(int(parameters['plot_trajectory']))  # Trajectory of tracker particle(s)
@@ -77,11 +78,17 @@ plot_trajectory     = bool(int(parameters['plot_trajectory']))  # Trajectory of 
 # =============================================================================
 # Derived parameters 
 # =============================================================================
+# density             = N/L      # not sure to input or calculate
+
 dx                  = L/NG # grid spacing
 x                   = np.arange(0,L,dx) # np array for x axis
-k_1                 = 2.*np.pi/L  # wave number for first mode 
+k                   = 2*np.pi*np.fft.rfftfreq(NG,dx)
+dk                  = k[1]-k[0]
+
 T                   = np.arange(0,T_end,dt) # np array for time axis
-# density             = N/L      # not sure to input or calculate
+omega               = 2*np.pi*np.fft.rfftfreq(len(T),dt)
+domega              = omega[1]-omega[0]
+
 omega_plasma        = np.sqrt(((N/(2*L))*e_e**2)/(epsilon0*m_e)) # plasma frequency
 
 print('Assuming half of N are electrons, other half are protons,\n'+
@@ -123,9 +130,15 @@ if InitialCondition=='Plasma_Oscillation':
     
     # excite mode in modes list
     for mode in modes:
-        r[:N//2]+=A*mode/n0*np.sin(mode*k_1*r[:N//2])
+        r[:N//2]+=A*mode/n0*np.sin(k[mode]*r[:N//2])
     r=r%L
-
+    
+    # theoretical dispersion relation
+    if v_sigma==0:
+        theoretical_dispersion_relation=omega_plasma*np.cos(0.5*dx*k)
+    else:
+        theoretical_dispersion_relation=np.sqrt(omega_plasma**2+3*v_sigma**2*k**2)
+        
 if InitialCondition=='Two_Stream_Instability':
     v0         = float(parameters['v0'])        # velocity
     v0_sigma   = float(parameters['v0_sigma'])        # velocity width
@@ -147,7 +160,7 @@ if InitialCondition=='Two_Stream_Instability':
                 np.random.normal(-v0,v0_sigma,size=(1,N//2)))
     
     for mode in modes:
-        r[:N//2]+=A*mode/density*np.sin(mode*k_1*r[:N//2])
+        r[:N//2]+=A*mode/density*np.sin(k[mode]*r[:N//2])
     r=r%L
     
 # if InitialCondition=='Single Beam':
@@ -174,6 +187,7 @@ E_D   = np.zeros(len(T)) # drift kinetic energy
 E_T   = np.zeros(len(T)) # thermal kinetic energy
 E_F   = np.zeros(len(T)) # field energy
 
+# shape=(NG,len(T)) , field(x,t) = grid_history[int(x//dx)%NG,int(t//dt)%int(T_end//dt)]
 rho_grid_history = np.zeros((NG,len(T)))
 phi_grid_history = np.zeros((NG,len(T)))
 E_grid_history   = np.zeros((NG,len(T)))
@@ -295,168 +309,194 @@ def update_motion(m,q,r,v,E_grid,scheme,weight):
 # =============================================================================
 def diagnostics_animation(r,v,phi_grid,E_grid,rho_grid,save_dir):
     global fig
-    if plot_animation:    
-        if t==0:
-            fig=plt.figure(figsize=(16,8))
+    if t==0:
+        fig=plt.figure(figsize=(16,8))
+    
+    # clear figure
+    plt.clf()
+    
+    # phase space
+    ax1=fig.add_subplot(221)
+    ax1.scatter(r[:N//2],v[:N//2],fc=(1,0,0,0.3),s=1)
+    ax1.scatter(r[N//2:],v[N//2:],fc=(0,0,1,0.3),s=1)
+    # ax1.hexbin(r,v,gridsize=200)
+    # tracker particles 
+    ax1.scatter(r[N//4],v[N//4],c='black',s=30,lw=1,edgecolor='white') # tracker 1
+    ax1.scatter(r[-1],v[-1],c='white',s=30,lw=1,edgecolor='black') # tracker 2
+    ax1.set_xlabel('position x (m)')
+    ax1.set_ylabel('velocity v (m/s)')
+    ax1.set_title('Phase Space')
+    # ax1.set_xlim(0.,L)
+    ax1.set_ylim(-1.1*np.max(np.abs(v)),1.1*np.max(np.abs(v)))
+    # ax1.set_ylim(-7e-10,7e-10)
+    
+    # velocity distribution
+    ax2=fig.add_subplot(222)
+    ax2.hist(v[:N//2],bins=100,range=((np.min(v),np.max(v))),
+              color='r',orientation='horizontal')
+    ax2.hist(v[N//2:],bins=100,range=((np.min(v),np.max(v))),
+              color='b',alpha=0.5,orientation='horizontal')
+    ax2.hist(v,bins=100,range=((np.min(v),np.max(v))),color='white',
+              edgecolor='black',lw=1.,orientation='horizontal',histtype='step')
+    ax2.set_xlabel('number of particles f(v)dv')
+    ax2.set_ylabel('velocity v (m/s)')
+    ax2.set_title('Velocity Distribution')
+    ax2.set_ylim(-1.1*np.max(np.abs(v)),1.1*np.max(np.abs(v)))
+    # ax2.set_ylim(-7e-10,7e-10)
+    
+    # density at grid positions
+    ax3=fig.add_subplot(223)
+    ax3.plot(x,rho_grid-np.mean(rho_grid))
+    # ax3.hist(r,bins=NG)
+    ax3.set_xlabel('position x (m)')
+    ax3.set_ylabel(r'charge density $\rho$ $(m^{-1})$')
+    ax3.set_title('Charge Density')
+    ax3.set_ylim(-1.1*np.max(np.abs(rho_grid-np.mean(rho_grid))),
+                  1.1*np.max(np.abs(rho_grid-np.mean(rho_grid))))
+    # ax3.set_ylim(-6e-7,6e-7)
+    # ax3.set_title('Density')
+    
+    # potential and field at grid positions
+    ax4=fig.add_subplot(224)
+    ax8=ax4.twinx()
+    ax4.plot(x,phi_grid,'blue')
+    ax8.plot(x,E_grid,'orange')
+    ax4.plot(x,np.zeros(NG),'black',lw=1)
+    ax4.set_xlabel('position x (m)')
+    ax4.set_ylabel(r'potential $\phi$ (V)',color='blue')
+    ax8.set_ylabel('field E (V/m)',color='orange')
+    ax4.set_title('Potential and Fields')
+    ax4.set_ylim(-1.1*np.max(np.abs(phi_grid)),1.1*np.max(np.abs(phi_grid)))
+    ax8.set_ylim(-1.1*np.max(np.abs(E_grid)),1.1*np.max(np.abs(E_grid)))
+    # ax4.set_ylim(-1.5e-8,1.5e-8)
+    # ax8.set_ylim(-1e-7,1e-7)
+    # ax4.set_title('Potential')
+    
+    fig.suptitle(InitialCondition+'\n'+'Snapshot at t = %.3f (s)'%T[t])
+    plt.tight_layout()
+    plt.pause(0.1)
+    
+    if save_animation:
+        animation_save_dir=save_dir+'/animation/'
+        if not os.path.isdir(animation_save_dir):
+            os.mkdir(animation_save_dir)
+        fig.savefig(animation_save_dir+str(t)+'.png')
         
-        # 
-        plt.clf()
-        ax1=fig.add_subplot(221)
-        ax3=fig.add_subplot(222)
-        ax4=fig.add_subplot(223)
-        ax2=fig.add_subplot(224)
-        ax8=ax2.twinx()
-        
-        # labels and title
-        ax1.set_xlabel('position x (m)')
-        ax1.set_ylabel('velocity v (m/s)')
-        ax1.set_title('Phase Space')
-        # ax1.set_xlim(0.,L)
-        ax1.set_ylim(-1.1*np.max(np.abs(v)),1.1*np.max(np.abs(v)))
-        # ax1.set_ylim(-7e-10,7e-10)
-        ax2.set_xlabel('position x (m)')
-        ax2.set_ylabel(r'potential $\phi$ (V)',color='blue')
-        ax8.set_ylabel('field E (V/m)',color='orange')
-        ax2.set_title('Potential and Fields')
-        ax2.set_ylim(-1.1*np.max(np.abs(phi_grid)),1.1*np.max(np.abs(phi_grid)))
-        ax8.set_ylim(-1.1*np.max(np.abs(E_grid)),1.1*np.max(np.abs(E_grid)))
-        # ax2.set_ylim(-1.5e-8,1.5e-8)
-        # ax8.set_ylim(-1e-7,1e-7)
-        # ax2.set_title('Potential')
-        ax3.set_xlabel('number of particles f(v)dv')
-        ax3.set_ylabel('velocity v (m/s)')
-        ax3.set_title('Velocity Distribution')
-        ax3.set_ylim(-1.1*np.max(np.abs(v)),1.1*np.max(np.abs(v)))
-        # ax3.set_ylim(-7e-10,7e-10)
-        ax4.set_xlabel('position x (m)')
-        ax4.set_ylabel(r'charge density $\rho$ $(m^{-1})$')
-        ax4.set_title('Charge Density')
-        ax4.set_ylim(-1.1*np.max(np.abs(rho_grid-np.mean(rho_grid))),
-                      1.1*np.max(np.abs(rho_grid-np.mean(rho_grid))))
-        # ax4.set_ylim(-6e-7,6e-7)
-        # ax4.set_title('Density')
-        fig.suptitle(InitialCondition+'\n'+'Snapshot at t = %.3f (s)'%T[t])
-        
-        # phase space
-        ax1.scatter(r[:N//2],v[:N//2],fc=(1,0,0,0.3),s=1)
-        ax1.scatter(r[N//2:],v[N//2:],fc=(0,0,1,0.3),s=1)
-        # ax1.hexbin(r,v,gridsize=200)
-        # tracker particles 
-        ax1.scatter(r[N//4],v[N//4],c='black',s=30,lw=1,edgecolor='white') # tracker 1
-        ax1.scatter(r[-1],v[-1],c='white',s=30,lw=1,edgecolor='black') # tracker 2
-        
-        # potential and field at grid positions
-        ax2.plot(x,phi_grid,'blue')
-        ax8.plot(x,E_grid,'orange')
-        ax2.plot(x,np.zeros(NG),'black',lw=1)
-        
-        # velocity distribution
-        ax3.hist(v[:N//2],bins=100,range=((np.min(v),np.max(v))),
-                  color='r',orientation='horizontal')
-        ax3.hist(v[N//2:],bins=100,range=((np.min(v),np.max(v))),
-                  color='b',alpha=0.5,orientation='horizontal')
-        ax3.hist(v,bins=100,range=((np.min(v),np.max(v))),color='white',
-                  edgecolor='black',lw=1.,orientation='horizontal',histtype='step')
-        
-        # density at grid positions
-        ax4.plot(x,rho_grid-np.mean(rho_grid))
-        # ax4.hist(r,bins=NG)
-        
-        plt.tight_layout()
-        plt.pause(0.1)
-        
-        if save_animation:
-            animation_save_dir=save_dir+'/animation/'
-            if not os.path.isdir(animation_save_dir):
-                os.mkdir(animation_save_dir)
-            fig.savefig(animation_save_dir+str(t)+'.png')
-        
-        return t
+    return t
     
 # =============================================================================
 # history
 # =============================================================================
 def history(T,E_D,E_T,E_F,P,save_dir):
-    if plot_history:
-        fig2,ax5=plt.subplots()
-        ax5.plot(T,E_D,label='drift')
-        ax5.plot(T,E_T,label='thermal')
-        ax5.plot(T,E_F,label='field')
-        ax5.plot(T,E_D+E_T+E_F,label='total')
-        ax5.set_xlabel('time t (s)')
-        ax5.set_ylabel('energy E (J)')
-        ax5.legend(bbox_to_anchor=(0,1.01,1,0.2),loc='lower left'
-                   ,mode='expand',borderaxespad=0.,ncol=4)
-        ax5.set_title('Energy History',y=1.07)
-        
-        fig3,ax6=plt.subplots()
-        ax6.plot(T,P-P[0])
-        ax6.set_xlabel('time t (s)')
-        ax6.set_ylabel('total momentum P (m/s)')
-        ax6.set_title('Total Momentum Change History')
-        
-        if save_history:
-            fig2.savefig(save_dir+'/energy_history.png')
-            fig3.savefig(save_dir+'/momentum_history.png')
+    fig2,ax5=plt.subplots()
+    ax5.plot(T,E_D,label='drift')
+    ax5.plot(T,E_T,label='thermal')
+    ax5.plot(T,E_F,label='field')
+    ax5.plot(T,E_D+E_T+E_F,label='total')
+    ax5.set_xlabel('time t (s)')
+    ax5.set_ylabel('energy E (J)')
+    ax5.legend(bbox_to_anchor=(0,1.01,1,0.2),loc='lower left'
+               ,mode='expand',borderaxespad=0.,ncol=4)
+    ax5.set_title('Energy History',y=1.07)
+    
+    fig3,ax6=plt.subplots()
+    ax6.plot(T,P-P[0])
+    ax6.set_xlabel('time t (s)')
+    ax6.set_ylabel('total momentum P (m/s)')
+    ax6.set_title('Total Momentum Change History')
+    
+    if save_history:
+        fig2.savefig(save_dir+'/energy_history.png')
+        fig3.savefig(save_dir+'/momentum_history.png')
         
     return True
+
+def mode_evolution(grid_history,save_dir):
+     # field(k,t)=grid_kt[int(k//k[0]%NG,int(t//dt)%int(T_end//dt)]
+    grid_kt=np.fft.rfft(grid_history,axis=0)
+    
+    # plot amplitude v.s. t for grid_kt selected modes
+    fig6,ax10=plt.subplots()
+    for mode in plot_mode_evolution:
+        label='Mode '+str(mode)
+        ax10.plot(T[:400],np.abs(grid_kt[mode,:400]),label=label)
+    ax10.set_xlabel('Time t (s)')
+    ax10.set_ylabel('Amplitude ()')
+    ax10.set_yscale('log')
+    ax10.legend(loc='upper left')
+    ax10.set_title('')
+    
+    # imshow grid_kt
+    fig7,ax11=plt.subplots()
+    ax11.imshow(np.abs(grid_kt)[:20,:300],
+                # extent=(T[0]-0.5*dt,T[100]-0.5*dt,k[10]-0.5*dk,k[0]-0.5*dk)
+                )
+    # ax11.set_xlabel(r'Time $t$ (s)')
+    # ax11.set_ylabel(r'Wave number $k$ (1/m)')
+    ax11.set_xlabel('Step #')
+    ax11.set_ylabel('Mode number')
+    ax11.set_title('')
+    
+    return grid_kt
 
 # =============================================================================
 # dispersion relation
 # =============================================================================
 def dispersion_relation(grid_history,save_dir):
     global x,T
-    if plot_omegak:
-        # plot grid_history(x,t)
-        fig4=plt.figure()
-        ax7=fig4.add_subplot(projection='3d')
-        x_mesh,T_mesh=np.meshgrid(x,T)
-        grid_history=np.transpose(grid_history)
-        ax7.plot_surface(T_mesh,x_mesh,grid_history)
-        ax7.set_xlabel('time t (s)')
-        ax7.set_ylabel('position x (m)')
-        ax7.set_zlabel(r'potential $\phi$ (V)')
-        ax7.set_title('Field history')
-        
-        # FFT grid_history(x,t) to obtain grid_omegak(k,omega)
-        grid_omegak=np.fft.rfft2(grid_history)
-        k=2*np.pi*np.fft.rfftfreq(NG,dx)
-        dk=k[1]-k[0]
-        lenk=len(k)
-        omega=2*np.pi*np.fft.rfftfreq(len(T),dt)
-        domega=omega[1]-omega[0]
-        lenomega=len(omega)
-        
-        # plot grid_omegak(k,omega)
-        grid_omegak=grid_omegak[:grid_omegak.shape[0]//2,:]
-        grid_omegak=grid_omegak[::-1,:]
-        fig5,ax9=plt.subplots()
-        ax9.set_xlabel(r'wave number $k$ (1/m)')
-        ax9.set_ylabel(r'angular frequency $\omega$ (1/s)')
-        ax9.set_title(InitialCondition+' Dispersion Relation')
-        ax9.imshow(np.abs(grid_omegak)[9*grid_omegak.shape[0]//10:,:]
-                   ,extent=(k[0]-0.5*dk,k[-1]-0.5*dk
-                            ,omega[0]-0.5*domega,omega[lenomega//10]-0.5*domega))
-        
-        # theoretical dispersion relation
-        if InitialCondition=='Plasma Oscillation':
-            ax9.plot(k,omega_plasma*np.cos(0.5*dx*k),'red',lw=0.5,label='theoretical')
-            ax9.legend(loc='upper right')
-        
-        # plt.tight_layout()
-        plt.show()
-        
-        if save_omegak:
-            fig4.savefig(save_dir+'/field_history.png')
-            fig5.savefig(save_dir+'/dispersion_relation.png')
+    # plot grid_history(x,t)
+    fig4=plt.figure()
+    ax7=fig4.add_subplot(projection='3d')
+    x_mesh,T_mesh=np.meshgrid(x,T)
+    grid_history=np.transpose(grid_history)
+    ax7.plot_surface(T_mesh,x_mesh,grid_history)
+    ax7.set_xlabel('time t (s)')
+    ax7.set_ylabel('position x (m)')
+    ax7.set_zlabel(r'potential $\phi$ (V)')
+    ax7.set_title('Field history')
+    
+    # imshow grid_history(x,t)
+    fig8,ax12=plt.subplots()
+    ax12.imshow(grid_history.T)
+    ax12.set_title('Field history')
+    
+    # FFT grid_history(x,t) to obtain grid_omegak(k,omega)
+    grid_omegak=np.fft.rfft2(grid_history)
+    lenk=len(k)
+    lenomega=len(omega)
+    
+    # 
+    grid_omegak=grid_omegak[:grid_omegak.shape[0]//2,:]
+    grid_omegak=grid_omegak[::-1,:]
+    
+    # plot grid_omegak(k,omega)
+    fig5,ax9=plt.subplots()
+    ax9.imshow(np.abs(grid_omegak)[9*grid_omegak.shape[0]//10:,:]
+               ,extent=(k[0]-0.5*dk,k[-1]-0.5*dk
+                        ,omega[0]-0.5*domega,omega[lenomega//10]-0.5*domega))
+    ax9.set_xlabel(r'wave number $k$ (1/m)')
+    ax9.set_ylabel(r'angular frequency $\omega$ (1/s)')
+    ax9.set_title(InitialCondition+' Dispersion Relation')
+    
+    # plot theoretical dispersion relation    
+    # if plot_theoretical_dispersion_relation:
+    #     ax9.plot(k,theoretical_dispersion_relation,'red',lw=0.5,label='theoretical')
+    #     ax9.legend(loc='upper right')
+    
+    # plt.tight_layout()
+    plt.show()
+    
+    if save_omegak:
+        fig4.savefig(save_dir+'/field_history.png')
+        fig5.savefig(save_dir+'/dispersion_relation.png')
             
-    return omega,k,grid_omegak
+    return grid_omegak
 
 # =============================================================================
 # save output to file
 # =============================================================================
 def output_to_file(m,q,r,v,phi_grid,rho_grid,E_grid,save_dir):
-# Save m,q,r(t),v(t),phi(t),rho(t),E(t)
+    # Save m,q,r(t),v(t),phi(t),rho(t),E(t)
     global t
     
     particle_save_dir=save_dir+'/particle'
@@ -501,7 +541,8 @@ for t in range(len(T)):
     k,rho_k,phi_k=solve_poisson(r,q,weight)[3:6]
     
     v_old=np.copy(v)
-    diagnostics_animation(r,0.5*(v_old+v),phi_grid,E_grid,rho_grid,save_dir)
+    if plot_animation:
+        diagnostics_animation(r,0.5*(v_old+v),phi_grid,E_grid,rho_grid,save_dir)
     
     # update particle i velocity v[i] and position r[i] at time t
     for i in range(N):
@@ -524,7 +565,13 @@ for t in range(len(T)):
         output_to_file(m,q,r,v,phi_grid,rho_grid,E_grid,save_dir)
     
 # history
-history(T,E_D,E_T,E_F,P,save_dir)
+if plot_history:
+    history(T,E_D,E_T,E_F,P,save_dir)
 
+# mode evolution
+if len(plot_mode_evolution)>0:
+    mode_evolution(E_grid_history,save_dir)
+    
 # dispersion relation
-omega,k,grid_omegak=dispersion_relation(E_grid_history,save_dir)
+if plot_omegak:
+    grid_omegak=dispersion_relation(E_grid_history,save_dir)
