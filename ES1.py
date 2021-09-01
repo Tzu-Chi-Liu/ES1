@@ -71,8 +71,10 @@ save_animation      = bool(int(parameters['save_animation']))      # save animat
 plot_history        = bool(int(parameters['plot_history']))       # Plot history
 save_history        = bool(int(parameters['save_history']))       # save history
 plot_mode_evolution = [int(mode) for mode in parameters['plot_mode_evolution'].split(',')]
+plot_theoretical_growth_rate = bool(int(parameters['plot_theoretical_growth_rate']))
 plot_omegak         = bool(int(parameters['plot_omegak']))       # Plot dispersion relation
 save_omegak         = bool(int(parameters['save_omegak']))       # save dispersion relation
+plot_theoretical_dispersion_relation = bool(int(parameters['plot_theoretical_dispersion_relation']))
 plot_trajectory     = bool(int(parameters['plot_trajectory']))  # Trajectory of tracker particle(s)
 
 # =============================================================================
@@ -135,9 +137,9 @@ if InitialCondition=='Plasma_Oscillation':
     
     # theoretical dispersion relation
     if v_sigma==0:
-        theoretical_dispersion_relation=omega_plasma*np.cos(0.5*dx*k)
+        theoretical_omega_of_k=omega_plasma*np.cos(0.5*dx*k)
     else:
-        theoretical_dispersion_relation=np.sqrt(omega_plasma**2+3*v_sigma**2*k**2)
+        theoretical_omega_of_k=np.sqrt(omega_plasma**2+3*v_sigma**2*k**2)
         
 if InitialCondition=='Two_Stream_Instability':
     v0         = float(parameters['v0'])        # velocity
@@ -162,6 +164,22 @@ if InitialCondition=='Two_Stream_Instability':
     for mode in modes:
         r[:N//2]+=A*mode/density*np.sin(k[mode]*r[:N//2])
     r=r%L
+    
+    # theoretical dispersion relation & growth rate
+    theoretical_omega_of_k=[np.sqrt(k**2*v0**2+omega_plasma**2
+                                    +omega_plasma*np.sqrt(4.*k**2*v0**2+omega_plasma**2)),
+                            -np.sqrt(k**2*v0**2+omega_plasma**2
+                                    +omega_plasma*np.sqrt(4.*k**2*v0**2+omega_plasma**2)),
+                            np.sqrt(k**2*v0**2+omega_plasma**2
+                                    -omega_plasma*np.sqrt(4.*k**2*v0**2+omega_plasma**2)),
+                            -np.sqrt(k**2*v0**2+omega_plasma**2
+                                    -omega_plasma*np.sqrt(4.*k**2*v0**2+omega_plasma**2))]
+    for omegak in theoretical_omega_of_k:
+        omegak[np.isnan(omegak)] = 0.
+    
+    theoretical_growth_rate=np.sqrt(-k**2*v0**2-omega_plasma**2
+                                    +omega_plasma*np.sqrt(4.*k**2*v0**2+omega_plasma**2))
+    theoretical_growth_rate[np.isnan(theoretical_growth_rate)]=0.
     
 # if InitialCondition=='Single Beam':
 #     v0         = 1.0        # velocity
@@ -416,15 +434,24 @@ def mode_evolution(grid_history,save_dir):
     grid_kt=np.fft.rfft(grid_history,axis=0)
     
     # plot amplitude v.s. t for grid_kt selected modes
-    fig6,ax10=plt.subplots()
-    for mode in plot_mode_evolution:
-        label='Mode '+str(mode)
-        ax10.plot(T[:400],np.abs(grid_kt[mode,:400]),label=label)
-    ax10.set_xlabel('Time t (s)')
-    ax10.set_ylabel('Amplitude ()')
-    ax10.set_yscale('log')
-    ax10.legend(loc='upper left')
-    ax10.set_title('')
+    fig6=plt.figure(figsize=(8,8))
+    for index in range(len(plot_mode_evolution)):
+        ax=fig6.add_subplot(len(plot_mode_evolution),1,index+1)
+        title='Mode '+str(plot_mode_evolution[index])
+        ax.plot(T[:200],np.abs(grid_kt[plot_mode_evolution[index],:200]))
+        if plot_theoretical_growth_rate:
+            ax.plot(T[:200],np.abs(grid_kt[plot_mode_evolution[index],0])
+                    *np.exp(theoretical_growth_rate[plot_mode_evolution[index]]*T[:200]))
+            growth_rate_label='Theoretical growth rate = %.3f'\
+                               %theoretical_growth_rate[plot_mode_evolution[index]]+str(' (1/s)')
+            ax.plot([],[],' ',label=growth_rate_label)
+            ax.legend(loc='upper left')
+        ax.set_xlabel('Time t (s)')
+        ax.set_ylabel('Amplitude (unit)')
+        ax.set_yscale('log')
+        ax.set_title(title)
+        
+    plt.tight_layout()
     
     # imshow grid_kt
     fig7,ax11=plt.subplots()
@@ -476,12 +503,12 @@ def dispersion_relation(grid_history,save_dir):
                         ,omega[0]-0.5*domega,omega[lenomega//10]-0.5*domega))
     ax9.set_xlabel(r'wave number $k$ (1/m)')
     ax9.set_ylabel(r'angular frequency $\omega$ (1/s)')
-    ax9.set_title(InitialCondition+' Dispersion Relation')
+    ax9.set_title(InitialCondition.replace('_',' ')+' Dispersion Relation')
     
     # plot theoretical dispersion relation    
-    # if plot_theoretical_dispersion_relation:
-    #     ax9.plot(k,theoretical_dispersion_relation,'red',lw=0.5,label='theoretical')
-    #     ax9.legend(loc='upper right')
+    if plot_theoretical_dispersion_relation:
+        ax9.plot(k,theoretical_omega_of_k,'red',lw=0.5,label='theoretical')
+        ax9.legend(loc='upper right')
     
     # plt.tight_layout()
     plt.show()

@@ -23,7 +23,7 @@ density             = 10.0       # not sure to input or calculate
 
 InitialCondition    = Two_Stream_Instability
 v0                  = 1.0        # Velocity
-v0_sigma            = 0.0        # Velocity width
+v0_sigma            = 0.1        # Velocity width
 charge              = same       # 'same' for q1q2>0 and 'opposite' for q1q2<0
 A                   = 0.0        # Sinusoidal perturbation amplitude
 Modes               = 0          # Sinusoidal perturbation wavevector 
@@ -31,7 +31,7 @@ Modes               = 0          # Sinusoidal perturbation wavevector
 # =============================================================================
 # Simulation (unphysical) parameters
 # =============================================================================
-NG                  = 64        # Number of grids
+NG                  = 128        # Number of grids
 dt                  = 0.01       # Time step
 
 weight              = CIC
@@ -48,6 +48,8 @@ save_animation      = 0          # save animation of snapshots
 plot_history        = 1          # Plot history
 save_history        = 0          # save history
 plot_mode_evolution = 1,2,5,20   # plot field(k,t)
+plot_theoretical_growth_rate = 1
 plot_omegak         = 1          # Plot dispersion relation
 save_omegak         = 0          # save dispersion relation
+plot_theoretical_dispersion_relation = 0
 plot_trajectory     = 0          # Plot trajectory of tracker particle(s)
