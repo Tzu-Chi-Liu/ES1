@@ -7,13 +7,12 @@ Created on Mon Aug 30 00:46:21 2021
 """
 import datetime
 
-input_file_loc=sys.argv[1]
-input_file_loc='simulation_results/Two_stream_instability/test/input.txt'
-InitialCondition='Two_stream_instability'
+N=5
+NG=11
+t=0.01
 
-specific_title=input_file_loc.split('/')[2]
-time='#'+datetime.datetime.now().strftime('%Y%m%d%H%M')
-def save_output(m,q,r,v,phi_grid,rho_grid,E_grid,InitialCondition,specific_title,time):
+def save_output(m,q,r,v,rho_grid,phi_grid,E_grid,
+                InitialCondition,specific_title,units,output_decimal_places,time):
 # Save m,q,r(t),v(t),phi(t),rho(t),E(t)
     if specific_title!='':
         save_dir='simulation_results/'+InitialCondition+'/'+specific_title+'/results'
@@ -22,30 +21,33 @@ def save_output(m,q,r,v,phi_grid,rho_grid,E_grid,InitialCondition,specific_title
     
     particle_save_filename=save_dir+'/particle/'+str(t)+'.txt'
     with open(particle_save_filename,'w') as f:
-        f.write('# mass\n')
-        for mass in m:
-            f.write(str(mass)+'\n')
-        f.write('# charge\n')
-        for charge in q:
-            f.write(str(charge)+'\n')
-        f.write('# position\n')
-        for position in r[t]:
-            f.write(str(position)+'\n')
-        f.write('# velocity\n')
-        for velocity in v[t]:
-            f.write(str(velocity)+'\n')
+        f.write(('# ES1 particle output at t = %.'+str(output_decimal_places)+'f ')%t+units['t']+'\n')
+        f.write(('# number  '
+               +'m '+'{:'+str(output_decimal_places+7)+'}'
+               +'q '+'{:'+str(output_decimal_places+7)+'}'
+               +'r '+'{:'+str(output_decimal_places+7)+'}'
+               +'v '+'{:'+str(output_decimal_places+7)+'}'+'\n')
+              .format(units['m'],units['q'],units['r'],units['v']))
+        for particle in range(N):
+            f.write(('%8d  '
+                   +'%+.'+str(output_decimal_places)+'e  '
+                   +'%+.'+str(output_decimal_places)+'e  '
+                   +'%+.'+str(output_decimal_places)+'e  '
+                   +'%+.'+str(output_decimal_places)+'e  '+'\n')
+                  %(particle,m[particle],q[particle],r[particle],v[particle]))
         
     field_save_filename=save_dir+'/field/'+str(t)+'.txt'
     with open(field_save_filename,'w') as f:
-        f.write('# rho_grid\m')
-        for rho in rho_grid:
-            f.write(str(rho)+'\n')
-        f.write('# phi_grid\n')
-        for phi in phi_grid:
-            f.write(str(phi)+'\n')
-        for E in E_grid:
-            f.write(str(E)+'\n')
+        f.write(('# ES1 field output at t = %.'+str(output_decimal_places)+'f ')%t+units['t']+'\n')
+        f.write(('# grid  '
+               +'ρ '+'{:'+str(output_decimal_places+7)+'}'
+               +'φ '+'{:'+str(output_decimal_places+7)+'}'
+               +'E '+'{:'+str(output_decimal_places+7)+'}'+'\n')
+              .format(units['rho_grid'],units['phi_grid'],units['E_grid']))
+        for grid in range(NG):
+            f.write(('%6d  '
+                   +'%+.'+str(output_decimal_places)+'e  '
+                   +'%+.'+str(output_decimal_places)+'e  '
+                   +'%+.'+str(output_decimal_places)+'e  '+'\n')
+                  %(grid,rho_grid[grid],phi_grid[grid],E_grid[grid]))
     
-t=0
-for t in range(1000):
-    save_output(m,q,r,v,phi_grid,rho_grid,E_grid,InitialCondition,specific_title,time)

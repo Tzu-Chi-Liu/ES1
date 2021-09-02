@@ -1,0 +1,75 @@
+# =============================================================================
+# Unit system
+# =============================================================================
+UnitSystem          = Arb
+
+# =============================================================================
+# Physical constants
+# =============================================================================
+e_e                 = 5e-2       # Elementary charge
+epsilon0            = 1.0        # Vacuum permittivity
+m_e                 = 1.0        # Electron mass
+m_p                 = 2000.0     # Proton mass
+k_B                 = 1.0        # Boltzmann's constant
+
+# =============================================================================
+# Boundary & initial (physical) conditions
+# =============================================================================
+L                   = 10.0      # Length of box
+NT                  = 5.0       # Total simulation time
+
+InitialCondition    = Self_Defined
+NSP                 = 2          # Number of species
+
+# Species 1
+N                   = 2000,2000  # Number of particles for species 1,2,... (seperate by comma, or use one number for all species)
+density             = 10.0       # not sure to input or calculate
+WP
+WC
+QM
+
+# distribution      = Maxwellian # Used for choosing different initial velocity distribution function
+v0                  = 
+v_sigma             = 0.0        # Velocity width (v0_sigma**2 ~ Temperature)
+T                   = 0.1        # Temperature for a Maxwellian velocity distribution
+
+Modes               = 1:50:1     # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
+X1                  = 
+V1                  = 
+THETAX              = 
+THETAV              = 
+
+# =============================================================================
+# Simulation (unphysical) parameters
+# =============================================================================
+NG                  = 128        # Number of grids
+DT                  = 0.01       # Time step
+
+IW                  = CIC
+scheme              = leapfrog
+solver              = FFT
+
+# =============================================================================
+# Analysis parameters
+# =============================================================================
+Tracker             = 1          # Number of tracker particles
+
+# =============================================================================
+# Output file settings
+# =============================================================================
+save_output         = 0          # Save output to txt file
+output_decimal_places = 7
+save_animation      = 0          # save animation of snapshots
+save_history        = 0          # save history
+save_omegak         = 0          # save dispersion relation
+
+# =============================================================================
+# Plotting settings
+# =============================================================================
+plot_animation      = 0          # Plot animation of snapshots
+plot_history        = 1          # Plot history
+plot_mode_evolution = 1,60   # plot field(k,t)
+plot_theoretical_growth_rate = 0
+plot_omegak         = 1          # Plot dispersion relation
+plot_theoretical_dispersion_relation = 1
+plot_trajectory     = 0          # Plot trajectory of tracker particle(s)
