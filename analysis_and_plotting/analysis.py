@@ -7,11 +7,28 @@ Created on Fri Sep  3 02:00:59 2021
 """
 import numpy as np
 
-def grid_xt_to_omegak(grid_history):
-    # FFT grid_history(x,t) to obtain grid_omegak(k,omega)
+def grid_xt_to_omegak(k,grid_history):
+    '''
+    Use 2DFFT to obtain grid_omegak(k,omega) from grid_history(x,t).
+    Because The 2DFFT of a real matrix has symmetry, 
+    only the upper left part of the 2DFFT result 
+    corresponding to (0<=k<=np.pi/dx,0<=omega<=np.pi/dt) is returned.
+    
+    Parameters
+    ----------
+    grid_history : numpy.ndarray
+        The field quantities in real space at grid points with shape=(NG,NT). 
+        grid_history[i,j] = field(x=i*dx,j*dt).
+
+    Returns
+    -------
+    grid_omegak : numpy.ndarray
+        The transformed complex field(k,omega) of shape (len(k),len(omega)).
+        grid_omegak[i,j]=FFTfield(k=i*dk=i*2.*np.pi/L,omega=j*domega=j*2.*np.pi/(DT*NT))
+
+    '''
     grid_omegak=np.fft.rfft2(grid_history)
-    grid_omegak=grid_omegak[:grid_omegak.shape[0]//2,:]
-    grid_omegak=grid_omegak[::-1,:]
+    grid_omegak=grid_omegak[:len(k),:]
     return grid_omegak
 
 def grid_xt_to_kt(grid_history):
@@ -27,6 +44,9 @@ def distribution_function_grid(x,v_grid,dv,r,v,NG,Nv):
     
     return distribution_function, X, V, x_space_distribution, v_space_distribution
 
-def calculate_field_grid_quantities(v_grid,distribution_function):
+# def calculate_field_grid_quantities(v_grid,distribution_function):
     
-    return n_grid, u_grid, P_grid, T_grid
+#     return n_grid, u_grid, P_grid, T_grid
+
+# def mode_energy():
+#     return E

@@ -22,7 +22,7 @@ InitialCondition    = Self_Defined
 NSP                 = 2          # Number of species
 
 # Species 1
-N                   = 2000,2000  # Number of particles for species 1,2,... (seperate by comma, or use one number for all species)
+N                   = 2000       # Number of particles 
 density             = 10.0       # not sure to input or calculate
 WP
 WC

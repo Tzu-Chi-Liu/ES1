@@ -1,7 +1,7 @@
 # =============================================================================
 # Unit system
 # =============================================================================
-UnitSystem          = Arb
+UnitSystem          = 'arb. units'
 
 # =============================================================================
 # Physical constants
@@ -16,42 +16,46 @@ k_B                 = 1.0        # Boltzmann's constant
 # Boundary & initial (physical) conditions
 # =============================================================================
 L                   = 10.0      # Length of box
-NT                  = 500       # Total number of simulation steps
+NT                  = 1200       # Total number of simulation steps
 
-InitialCondition    = Plasma_Oscillation
+InitialCondition    = 'Plasma_Oscillation'
 N                   = 40000      # Number of particles
 density             = 10.0       # not sure to input or calculate
 A                   = 1e-5       # Perturbation amplitude
-Modes               = 1,60     # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
-v_sigma             = 0.1        # Velocity width (v0_sigma**2 ~ Temperature)
-T                   = 0.1        # Temperature for a Maxwellian velocity distribution
-v_gt                = 0.0        # Galilean transformation velocity 
+Modes               = [1,15]        # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
+v0                  = 0.0
+v_sigma             = 0.0        # Velocity width (v0_sigma**2 ~ Temperature)
+T                   = 0.0        # Temperature for a Maxwellian velocity distribution
 
 # =============================================================================
 # Simulation (unphysical) parameters
 # =============================================================================
 NG                  = 128        # Number of grids
-DT                  = 0.01       # Time step
+DT                  = 0.05       # Time step
 
-IW                  = CIC
-scheme              = leapfrog
-solver              = FFT
+IW                  = 'CIC'
+scheme              = 'leapfrog'
+solver              = 'FFT'
 
 # =============================================================================
 # Analysis parameters
 # =============================================================================
-Tracker             = 1          # Number of tracker particles
+NTracker            = 1          # Number of tracker particles
 
 # =============================================================================
 # Output file settings
 # =============================================================================
 # .txt output files
-save_output         = 1          # Save output to txt file
-output_decimal_places = 7
+save_output         = False          # Save output to txt file
+output_Ndecimal_places = 8
 
 # 
-save_animation      = 0          # save animation of snapshots
-save_history        = 0          # save history
+save_animation      = False          # save animation of snapshots
+save_energy_history        = 0          # save history
+save_momentum_change_history = 0
+save_grid_history = 0
+save_selected_modes_history = False
+save_all_modes_history = 0
 save_omegak         = 0          # save dispersion relation
 
 # =============================================================================
@@ -62,42 +66,35 @@ plot_animation      = 0          # Plot animation of snapshots
 
 # energy-time history 
 plot_energy_history = 1          # Plot history
-# energy_history_tlim= 0.,1.      # Separate by comma
-# energy_history_Elim= 0.,1.
+energy_history_tlim= 'default'      # Separate by comma
+energy_history_Elim= (0.,1.)
 
 # momentum_change-time history 
 plot_momentum_change_history = 1          # Plot history
-# momentum_change_history_tlim= 0.,1.      # Separate by comma
-# momentum_change_history_Elim= 0.,1.
+momentum_change_history_tlim= 'default'     # Separate by comma
+momentum_change_history_Elim= 'default'
 
 # grid history 
 plot_grid_history = 1          # Plot history
-# grid_history_projection = 3d
-# grid_history_xlim= 0.,1.      # Separate by comma
-# grid_history_tlim= 0.,1.
+grid_history_projection = '3d'
+grid_history_xlim= 'default'      # Separate by comma
+grid_history_tlim= 'default'
 
 # selected_mode history 
-plot_selected_mode_history = 1          # Plot history
-selected_modes = 1,60   # plot field(k,t)
+plot_selected_modes_history = 1          # Plot history
+selected_modes = [1,5,10,60]   # plot field(k,t)
 plot_theoretical_growth_rate = 0
 
-# all_mode history 
-plot_all_mode_history = 1          # Plot history
+# all_modes history 
+plot_all_modes_history = 1          # Plot history
 
 # tracker_particle_trajectory_history
 plot_trajectory     = 0          # Plot trajectory of tracker particle(s)
-# space='R-t','V-t','R-V'      # Choose to plot 'R-t', 'V-t', 'R-V' (separate by comma to plot mulitple subplots)
-# tlim=None
-# Rlim=None
-# Vlim=None
+space=('R-t','V-t','R-V')      # Choose to plot 'R-t', 'V-t', 'R-V' (separate by comma to plot mulitple subplots)
+tlim=None
+Rlim=None
+Vlim=None
 
 # dispersion relation
 plot_omegak         = 1          # Plot dispersion relation
 plot_theoretical_dispersion_relation = 1
-
-
-
-
-
-plot_history=1
-

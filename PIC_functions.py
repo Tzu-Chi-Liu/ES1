@@ -10,27 +10,26 @@ import numpy as np
 # =============================================================================
 # source weighting
 # =============================================================================
-def weightrho(r,e,IW,N,NG,dx):
+def weightrho(r,q,IW,N,NG,dx):
     # Weighting particle positions r to grid density rho_grid
     rho_grid=np.zeros(NG)
     for i in range(N):
         x=int(r[i]//dx)
         if IW=='NGP' or IW=='1':
             if np.abs(r[i]%dx)<0.5*dx:
-                rho_grid[x%NG]+=e[i]/dx
+                rho_grid[x%NG]+=q[i]/dx
             else:
-                rho_grid[(x+1)%NG]+=e[i]/dx
+                rho_grid[(x+1)%NG]+=q[i]/dx
         if IW=='CIC' or IW=='2' or IW=='energy conserving' or IW=='3':
-            rho_grid[x%NG]+=e[i]/dx*(dx-r[i]%dx)/dx
-            rho_grid[(x+1)%NG]+=e[i]/dx*(r[i]%dx)/dx
+            rho_grid[x%NG]+=q[i]/dx*(dx-r[i]%dx)/dx
+            rho_grid[(x+1)%NG]+=q[i]/dx*(r[i]%dx)/dx
             
     return rho_grid
 
 # =============================================================================
 # Poisson solver
 # =============================================================================
-def solve_poisson(r,e,IW,NG,dx,epsilon0,solver='FFT',operator='local'):
-    rho_grid=weightrho(r,e,IW)
+def solve_poisson(rho_grid,NG,dx,epsilon0,solver='FFT',operator='local'):
     
     if solver=='FFT':
         # Use FFT to solve Poisson equation with periodic boundary condition
@@ -54,12 +53,12 @@ def solve_poisson(r,e,IW,NG,dx,epsilon0,solver='FFT',operator='local'):
     gradient[NG-1,0]=1./(2.*dx)
     E_grid=-gradient@phi_grid
     
-    return phi_grid,rho_grid,E_grid,k,rho_k,phi_k
+    return phi_grid,E_grid
 
 # =============================================================================
 # force weighting
 # =============================================================================
-def weightField(m,q,r,v,E_grid,IW,NG,dx):
+def weightField(r,E_grid,IW,NG,dx):
     # Weighting grid field E to obtain field E_p at particle position r
     X=int(r//dx)
     if IW=='1' or IW=='NGP' or IW=='energy conserving' or IW=='3':
@@ -75,9 +74,8 @@ def weightField(m,q,r,v,E_grid,IW,NG,dx):
 # =============================================================================
 # integration of EOM
 # =============================================================================
-def update_motion(m,q,r,v,E_grid,scheme,IW,DT,L):
-    global step 
-    E_par=weightField(m,q,r,v,E_grid,IW)
+def update_motion(m,q,r,v,E_par,scheme,IW,DT,L,E_grid,step):
+    # global step 
     a=q*E_par/m
     
     if scheme=='leapfrog':
@@ -107,4 +105,5 @@ def update_motion(m,q,r,v,E_grid,scheme,IW,DT,L):
         
         r+=v*0.5*DT
         r=r%L
-        
+    
+    return r,v

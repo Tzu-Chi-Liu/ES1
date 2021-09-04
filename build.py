@@ -11,14 +11,14 @@ import numpy as np
 # Build m, q, r, v from parameters
 # =============================================================================
 
-def build(parameters):
+def load_particles(parameters):
     '''
     For generating the particle m, q, r, v np arrays from the parameters dictionary.
 
     Parameters
     ----------
     parameters : dict
-        Parameters read from `input.txt`.
+        Parameters read from `input.txt` using input_output.load_input(input_file_loc).
 
     Returns
     -------
@@ -32,72 +32,88 @@ def build(parameters):
         Initial velocity of each particle.
 
     '''
+    
+    # Species 1
+    # N                   = 2000       # Number of particles
+    # density             = 10.0       # not sure to input or calculate
+    # WP
+    # WC
+    # QM
+    
+    # # distribution      = Maxwellian # Used for choosing different initial velocity distribution function
+    # v0                  = 
+    # v_sigma             = 0.0        # Velocity width (v0_sigma**2 ~ Temperature)
+    # T                   = 0.1        # Temperature for a Maxwellian velocity distribution
+    
+    # Modes               = 1:50:1     # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
+    # X1                  = 
+    # V1                  = 
+    # THETAX              = 
+    # THETAV              = 
+    
+    
+    
+    k=2.*np.pi/parameters['L']
+    density=parameters['N']/parameters['L']
+    
     # if parameters['InitialCondition']=='Particle Pair Oscillation':
     #     N=2
-    #     m=np.array([m_e,m_e])
-    #     q=np.array([e_e,-e_e])
-    #     r=np.array([L/4.,2*L/4.])
+    #     m=np.array([parameters['m_e'],parameters['m_e']])
+    #     q=np.array([parameters['e'],-parameters['e']])
+    #     r=np.array([parameters['L']/4.,2*parameters['L']/4.])
     #     v=np.array([0.,0.])
         
     if parameters['InitialCondition']=='Plasma_Oscillation':
-        A          = float(parameters['A'])
-        if ':' in parameters['Modes']:
-            modes  = list(range(parameters['Modes'].split(':')[0],parameters['Modes'].split(':')[1]))
-        else:
-            modes  = [int(mode) for mode in parameters['Modes'].split(',')]
-        v_sigma   = float(parameters['v_sigma'])
-        v_gt          = float(parameters['v_gt'])         # velocity
-        n0         = 0.5*float(parameters['N'])/float(parameters['L'])
+        A          = parameters['A']
+        modes      = parameters['Modes']
+        v_sigma   = parameters['v_sigma']
+        n0         = 0.5*parameters['N']/parameters['L']
         
         # first half electrons, second half protons
-        m=np.ones(N)*m_e
-        m[N//2:]=m_p
-        q=-1.*np.ones(N)*e_e
-        q[N//2:]*=-1.
-        r=np.append(np.linspace(0,L,N//2),np.linspace(0,L,N//2))
-        v=np.append(np.random.normal(0,v_sigma,size=(1,N//2)),np.zeros(N//2))
+        m=np.ones(parameters['N'])*parameters['m_e']
+        m[parameters['N']//2:]=parameters['m_p']
+        q=-1.*np.ones(parameters['N'])*parameters['e']
+        q[parameters['N']//2:]*=-1.
+        r=np.append(np.linspace(0,parameters['L'],parameters['N'])//2,np.linspace(0,parameters['L'],parameters['N']//2))
+        v=np.append(np.random.normal(0,v_sigma,size=(1,parameters['N']//2)),np.zeros(parameters['N']//2))
         
-        # Galilean transformation
-        v+=v_gt
         
         # excite mode in modes list
         for mode in modes:
-            r[:N//2]+=A*mode/n0*np.sin(mode*k*r[:N//2])
-        r=r%L
+            r[:parameters['N']//2]+=A*mode/n0*np.sin(mode*k*r[:parameters['N']//2])
+        r=r%parameters['L']
     
     if parameters['InitialCondition']=='Two_Stream_Instability':
-        v0         = float(parameters['v0'])        # velocity
-        v0_sigma   = float(parameters['v0_sigma'])        # velocity width
+        v0         = parameters['v0']     # velocity
+        v0_sigma   = parameters['v0_sigma']       # velocity width
         charge     = parameters['charge']
-        A          = float(parameters['A'])
-        if ':' in parameters['Modes']:
-            modes  = list(range(parameters['Modes'].split(':')[0],parameters['Modes'].split(':')[1]))
-        else:
-            modes  = [int(mode) for mode in parameters['Modes'].split(',')]
+        A          = parameters['A']
+        modes      = parameters['Modes']
         
-        m=np.ones(N)*m_e 
-        q=-1*np.ones(N)*e_e
+        m=np.ones(parameters['N'])*parameters['m_e'] 
+        q=-1*np.ones(parameters['N'])*parameters['e']
         if charge == 'opposite':
-            q[N//2:]*=-1.
-        r=np.random.random(N)*L
-        v=np.append(np.random.normal(v0,v0_sigma,size=(1,N//2)),
-                    np.random.normal(-v0,v0_sigma,size=(1,N//2)))
+            q[parameters['N']//2:]*=-1.
+        r=np.random.random(parameters['N'])*parameters['L']
+        v=np.append(np.random.normal(v0,v0_sigma,size=(1,parameters['N']//2)),
+                    np.random.normal(-v0,v0_sigma,size=(1,parameters['N']//2)))
         
         for mode in modes:
-            r[:N//2]+=A*mode/density*np.sin(mode*k*r[:N//2])
-        r=r%L
+            r[:parameters['N']//2]+=A*mode/density*np.sin(mode*k*r[:parameters['N']//2])
+        r=r%parameters['L']
         
     # if parameters['InitialCondition']=='Single Beam':
     #     v0         = 1.0        # velocity
     #     v0_sigma   = 0.0        # velocity width
     #     A          = 0.01       # sinusoidal perturbation amplitude
         
-    #     m=np.ones(N)*m_e
-    #     q=-1*np.ones(N)*e_e
-    #     # q[N//2:]*=-1.
-    #     r=np.random.random(N)*L
-    #     # v=np.random.normal(v0,v0_sigma,size=(1,N))[0]
-    #     # v[N//2:]*=-1.
-    #     v=np.random.normal(v0,v0_sigma,size=(1,N))[0]
+    #     m=np.ones(parameters['N']))*parameters['m_e']
+    #     q=-1*np.ones(parameters['N']))*parameters['e']
+    #     # q[parameters['N'])//2:]*=-1.
+    #     r=np.random.random(parameters['N']))*parameters['L']
+    #     # v=np.random.normal(v0,v0_sigma,size=(1,parameters['N'])))[0]
+    #     # v[parameters['N'])//2:]*=-1.
+    #     v=np.random.normal(v0,v0_sigma,size=(1,parameters['N'])))[0]
         
     return m,q,r,v
+
