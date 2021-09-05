@@ -32,6 +32,18 @@ def load_particles(parameters):
         Initial velocity of each particle.
 
     '''
+    m_e=parameters['m_e']
+    m_p=parameters['m_p']
+    e=parameters['e']
+    k_B=parameters['k_B']
+    
+    N=parameters['N']
+    L=parameters['L']
+    
+    k=2.*np.pi/L
+    density=N/L
+    
+    InitialCondition=parameters['InitialCondition']
     
     # Species 1
     # N                   = 2000       # Number of particles
@@ -51,69 +63,86 @@ def load_particles(parameters):
     # THETAX              = 
     # THETAV              = 
     
+
     
-    
-    k=2.*np.pi/parameters['L']
-    density=parameters['N']/parameters['L']
-    
-    # if parameters['InitialCondition']=='Particle Pair Oscillation':
+    # if InitialCondition=='Particle Pair Oscillation':
     #     N=2
-    #     m=np.array([parameters['m_e'],parameters['m_e']])
-    #     q=np.array([parameters['e'],-parameters['e']])
-    #     r=np.array([parameters['L']/4.,2*parameters['L']/4.])
+    #     m=np.array([m_e,m_e])
+    #     q=np.array([e,-e])
+    #     r=np.array([L/4.,2*L/4.])
     #     v=np.array([0.,0.])
         
-    if parameters['InitialCondition']=='Plasma_Oscillation':
+    if InitialCondition=='Plasma_Oscillation':
         A          = parameters['A']
         modes      = parameters['Modes']
-        v_sigma   = parameters['v_sigma']
-        n0         = 0.5*parameters['N']/parameters['L']
+        v0         = parameters['v0']
+        v_sigma    = parameters['v_sigma']
+        n0         = 0.5*N/L
         
         # first half electrons, second half protons
-        m=np.ones(parameters['N'])*parameters['m_e']
-        m[parameters['N']//2:]=parameters['m_p']
-        q=-1.*np.ones(parameters['N'])*parameters['e']
-        q[parameters['N']//2:]*=-1.
-        r=np.append(np.linspace(0,parameters['L'],parameters['N'])//2,np.linspace(0,parameters['L'],parameters['N']//2))
-        v=np.append(np.random.normal(0,v_sigma,size=(1,parameters['N']//2)),np.zeros(parameters['N']//2))
+        m=np.ones(N)*m_e
+        m[N//2:]=m_p
+        q=-1.*np.ones(N)*e
+        q[N//2:]*=-1.
+        r=np.append(np.linspace(0.,L,N//2),np.linspace(0.,L,N//2))
+        v=np.append(np.random.normal(v0,v_sigma,size=(1,N//2)),np.zeros(N//2))
         
         
         # excite mode in modes list
         for mode in modes:
-            r[:parameters['N']//2]+=A*mode/n0*np.sin(mode*k*r[:parameters['N']//2])
-        r=r%parameters['L']
+            r[:N//2]+=A/n0*np.sin(mode*k*r[:N//2])
+        r=r%L
     
-    if parameters['InitialCondition']=='Two_Stream_Instability':
+    if InitialCondition=='Two_Stream_Instability':
         v0         = parameters['v0']     # velocity
         v0_sigma   = parameters['v0_sigma']       # velocity width
         charge     = parameters['charge']
         A          = parameters['A']
         modes      = parameters['Modes']
         
-        m=np.ones(parameters['N'])*parameters['m_e'] 
-        q=-1*np.ones(parameters['N'])*parameters['e']
+        m=np.ones(N)*m_e 
+        q=-1*np.ones(N)*e
         if charge == 'opposite':
-            q[parameters['N']//2:]*=-1.
-        r=np.random.random(parameters['N'])*parameters['L']
-        v=np.append(np.random.normal(v0,v0_sigma,size=(1,parameters['N']//2)),
-                    np.random.normal(-v0,v0_sigma,size=(1,parameters['N']//2)))
+            q[N//2:]*=-1.
+        r=np.random.random(N)*L
+        v=np.append(np.random.normal(v0,v0_sigma,size=(1,N//2)),
+                    np.random.normal(-v0,v0_sigma,size=(1,N//2)))
         
         for mode in modes:
-            r[:parameters['N']//2]+=A*mode/density*np.sin(mode*k*r[:parameters['N']//2])
-        r=r%parameters['L']
+            r[:N//2]+=A*mode/density*np.sin(mode*k*r[:N//2])
+        r=r%L
         
-    # if parameters['InitialCondition']=='Single Beam':
+    # if InitialCondition=='Single Beam':
     #     v0         = 1.0        # velocity
     #     v0_sigma   = 0.0        # velocity width
     #     A          = 0.01       # sinusoidal perturbation amplitude
         
-    #     m=np.ones(parameters['N']))*parameters['m_e']
-    #     q=-1*np.ones(parameters['N']))*parameters['e']
-    #     # q[parameters['N'])//2:]*=-1.
-    #     r=np.random.random(parameters['N']))*parameters['L']
-    #     # v=np.random.normal(v0,v0_sigma,size=(1,parameters['N'])))[0]
-    #     # v[parameters['N'])//2:]*=-1.
-    #     v=np.random.normal(v0,v0_sigma,size=(1,parameters['N'])))[0]
+    #     m=np.ones(N)*m_e
+    #     q=-1*np.ones(N)*e
+    #     # q[N//2:]*=-1.
+    #     r=np.random.random(N)*L
+    #     # v=np.random.normal(v0,v0_sigma,size=(1,N))[0]
+    #     # v[N//2:]*=-1.
+    #     v=np.random.normal(v0,v0_sigma,size=(1,N))[0]
+    
+    # if InitialCondition=='Self Defined':
+    #     v0         = parameters['v0']        # velocity
+    #     v0_sigma   = parameters['v0_sigma']        # velocity width
+    #     charge     = parameters['charge']
+    #     A          = parameters['A']
+    #     modes  = parameters['Modes']
+        
+    #     m=np.ones(N)*m_e 
+    #     q=-1*np.ones(N)*e
+    #     if charge == 'opposite':
+    #         q[N//2:]*=-1.
+    #     r=np.random.random(N)*L
+    #     v=np.append(np.random.normal(v0,v0_sigma,size=(1,N//2)),
+    #                 np.random.normal(-v0,v0_sigma,size=(1,N//2)))
+        
+    #     for mode in modes:
+    #         r[:N//2]+=A*mode/density*np.sin(k[mode]*r[:N//2])
+    #     r=r%L
         
     return m,q,r,v
 

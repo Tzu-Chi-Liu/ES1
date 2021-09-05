@@ -44,9 +44,60 @@ def distribution_function_grid(x,v_grid,dv,r,v,NG,Nv):
     
     return distribution_function, X, V, x_space_distribution, v_space_distribution
 
+def generate_units(UnitSystem):
+    units={'t':'(arb. unit)',
+       'm':'(arb. unit)',
+       'q':'(arb. unit)',
+       'r':'(arb. unit)',
+       'v':'(arb. unit)',
+       'rho_grid':'(arb. unit)',
+       'phi_grid':'(arb. unit)',
+       'E_grid':'(arb. unit)',
+       'k':'(arb. unit)',
+       'omega':'(arb. unit)',
+       'Momentum':'(arb. unit)',
+       'Energy':'(arb. unit)',
+       'arb. unit':'(arb. unit)'
+       }
+
+    if UnitSystem=='SI':
+        units['t']='(s)'
+        units['m']='(kg)'
+        units['q']='(C)'
+        units['r']='(m)'
+        units['v']='(m/s)'
+        units['rho_grid']='(C/m)'
+        units['phi_grid']='(V)'
+        units['E_grid']='(V/m)'
+        units['k']='(1/m)'
+        units['omega']='(1/s)'
+        units['Momentum']='(kg*m/s)'
+        units['Energy']='(J)'
+        
+    if UnitSystem=='Normalized':
+        units['t']='(1/ω_p)'
+        units['m']='(kg)'
+        units['q']='(C)'
+        units['r']='(c/ω_p)'
+        units['v']='(c)'
+        units['rho_grid']='(C*ω_p/c)'
+        units['phi_grid']='(V)'
+        units['E_grid']='(V*ω_p/c)'
+        units['k']='(ω_p/c)'
+        units['omega']='(ω_p)'
+        units['Momentum']='(kg*c)'
+        units['Energy']='(J)'
+        
+    return units
 # def calculate_field_grid_quantities(v_grid,distribution_function):
     
 #     return n_grid, u_grid, P_grid, T_grid
 
 # def mode_energy():
 #     return E
+
+# def calculate_omega_plasma():
+#     return omega_plasma
+
+# def calculate_lambda_Debye():
+#     return lambda_Debye

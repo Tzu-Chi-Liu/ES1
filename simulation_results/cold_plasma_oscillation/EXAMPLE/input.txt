@@ -22,7 +22,7 @@ InitialCondition    = 'Plasma_Oscillation'
 N                   = 40000      # Number of particles
 density             = 10.0       # not sure to input or calculate
 A                   = 1e-5       # Perturbation amplitude
-Modes               = [1,15]        # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
+Modes               = [1,2,3,4,5]        # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
 v0                  = 0.0
 v_sigma             = 0.0        # Velocity width (v0_sigma**2 ~ Temperature)
 T                   = 0.0        # Temperature for a Maxwellian velocity distribution
@@ -33,7 +33,7 @@ T                   = 0.0        # Temperature for a Maxwellian velocity distrib
 NG                  = 128        # Number of grids
 DT                  = 0.05       # Time step
 
-IW                  = 'CIC'
+IW                  = '3'
 scheme              = 'leapfrog'
 solver              = 'FFT'
 
@@ -82,7 +82,7 @@ grid_history_tlim= 'default'
 
 # selected_mode history 
 plot_selected_modes_history = 1          # Plot history
-selected_modes = [1,5,10,60]   # plot field(k,t)
+selected_modes = [1,5,15,60]   # plot field(k,t)
 plot_theoretical_growth_rate = 0
 
 # all_modes history 

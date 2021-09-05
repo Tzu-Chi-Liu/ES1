@@ -20,7 +20,7 @@ def weightrho(r,q,IW,N,NG,dx):
                 rho_grid[x%NG]+=q[i]/dx
             else:
                 rho_grid[(x+1)%NG]+=q[i]/dx
-        if IW=='CIC' or IW=='2' or IW=='energy conserving' or IW=='3':
+        if IW=='CIC' or IW=='2' or IW=='EnergyConserving' or IW=='3':
             rho_grid[x%NG]+=q[i]/dx*(dx-r[i]%dx)/dx
             rho_grid[(x+1)%NG]+=q[i]/dx*(r[i]%dx)/dx
             
@@ -61,7 +61,7 @@ def solve_poisson(rho_grid,NG,dx,epsilon0,solver='FFT',operator='local'):
 def weightField(r,E_grid,IW,NG,dx):
     # Weighting grid field E to obtain field E_p at particle position r
     X=int(r//dx)
-    if IW=='1' or IW=='NGP' or IW=='energy conserving' or IW=='3':
+    if IW=='1' or IW=='NGP' or IW=='EnergyConserving' or IW=='3':
         if np.abs(r%dx)<(0.5)*dx:    
             E_par=E_grid[X%NG]
         else:
@@ -75,7 +75,6 @@ def weightField(r,E_grid,IW,NG,dx):
 # integration of EOM
 # =============================================================================
 def update_motion(m,q,r,v,E_par,scheme,IW,DT,L,E_grid,step):
-    # global step 
     a=q*E_par/m
     
     if scheme=='leapfrog':

@@ -25,7 +25,7 @@ def energy_history_plot(t,E_D,E_T,E_F,units,tlim=None,Elim=None):
                ,mode='expand',borderaxespad=0.,ncol=4)
     ax.set_title('Energy History',y=1.07)
     
-    return fig
+    return fig, ax
 
 def momentum_change_history_plot(t,P,units,tlim=None,Plim=None):
     fig,ax=plt.subplots()
@@ -38,7 +38,7 @@ def momentum_change_history_plot(t,P,units,tlim=None,Plim=None):
     ax.set_xlabel('Time t '+units['t'])
     ax.set_ylabel(r'Total momentum change $\Delta P$ '+units['Momentum'])
     ax.set_title('Total Momentum Change History')
-    return fig
+    return fig, ax
 
 def grid_history_plot(x_grid,t,dx,DT,grid_history,units,projection='2d',xlim=None,tlim=None):
     fig=plt.figure()
@@ -82,7 +82,7 @@ def grid_history_plot(x_grid,t,dx,DT,grid_history,units,projection='2d',xlim=Non
         
     ax.set_title('Field history')
     
-    return fig
+    return fig, ax
 
 def selected_mode_history_plot(k,t,grid_kt,selected_modes,
                                plot_theoretical_growth_rate,theoretical_growth_rate,units,
@@ -118,7 +118,7 @@ def selected_mode_history_plot(k,t,grid_kt,selected_modes,
         ax.set_title(title)
         
     plt.tight_layout()
-    return fig
+    return fig, ax
 
 def all_mode_history_plot(k,t,dk,DT,grid_kt,units,part='abs',klim=None,tlim=None):
     fig,ax=plt.subplots()
@@ -151,7 +151,7 @@ def all_mode_history_plot(k,t,dk,DT,grid_kt,units,part='abs',klim=None,tlim=None
     cbar.set_label('Amplitude '+units['arb. unit'],rotation=90)
     plt.tight_layout()
     
-    return fig
+    return fig, ax
 
 def tracker_particle_trajectory_plot(t,R,V,Tracker,units,
                                      space=['R-t'],tlim=None,Rlim=None,Vlim=None):
@@ -198,7 +198,7 @@ def tracker_particle_trajectory_plot(t,R,V,Tracker,units,
         ax.legend(loc='best')
         ax.set_title('R-V Plot')
         
-    return fig
+    return fig, ax
 
 # =============================================================================
 # dispersion relation
@@ -237,7 +237,7 @@ def dispersion_relation_plot(k,omega,dk,domega,grid_omegak,units,
         ax.plot(k,theoretical_omega_of_k,'red',lw=0.5,label='Theoretical')
         ax.legend(loc='best')
 
-    return fig 
+    return fig, ax 
 
 def phase_space_plot(r,v,N,units):
     fig,ax=plt.subplots()
@@ -253,7 +253,7 @@ def phase_space_plot(r,v,N,units):
     ax.set_xlim()
     ax.set_ylim()
     
-    return fig
+    return fig, ax
 
 def distribution_function_grid_plot(X,V,distribution_function,projection,units):
     fig=plt.figure()
@@ -267,7 +267,7 @@ def distribution_function_grid_plot(X,V,distribution_function,projection,units):
     ax.set_ylabel('velocity v '+units['v'])
     ax.set_title('Phase Space')
     
-    return fig
+    return fig, ax
 
 def grid_plot(x,grid,units):
     fig,ax=plt.subplots()
@@ -275,5 +275,10 @@ def grid_plot(x,grid,units):
     ax.set_xlabel('position x '+units['r'])
     ax.set_ylabel(r'charge density $\rho$ '+units['rho_grid'])
     ax.set_title('Charge Density')
-    return fig
+    return fig, ax
 
+# =============================================================================
+# 
+# =============================================================================
+if __name__=='__main__':
+    import read_output
