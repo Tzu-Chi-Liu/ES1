@@ -1,7 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import sys
-import os
 
 import input_output
 import build
@@ -15,83 +13,92 @@ from analysis_and_plotting import plotting
 # =============================================================================
 # Load input file into parameters dict & save to same dir as input file
 # =============================================================================
-# input_file_loc=sys.argv[1] # For running in terminal
-input_file_loc='simulation_results/cold_plasma_oscillation/EXAMPLE/input.txt' # for running in IDE (ex:Spyder)
-parameters, save_dir = input_output.load_input(input_file_loc)
+# input_folder_loc=sys.argv[1] # For running in terminal
+input_folder_loc='simulation_results/EXAMPLE/inputs' # for running in IDE (ex:Spyder)
+input_txt_parameters, save_dir, species_parameters = input_output.load_input(input_folder_loc)
 
 # =============================================================================
 # Load from parameters dict
 # =============================================================================
-UnitSystem          = parameters['UnitSystem']
-e                   = parameters['e']     # elementary charge
-epsilon0            = parameters['epsilon0']        # vacuum permittivity
-m_e                 = parameters['m_e']        # electron mass
-m_p                 = parameters['m_p']     # proton mass
-k_B                 = parameters['k_B'] 
+UnitSystem          = input_txt_parameters['UnitSystem']
 
-N                   = parameters['N']      # number of particles
-L                   = parameters['L']        # length of box
+e                   = input_txt_parameters['e']     
+epsilon0            = input_txt_parameters['epsilon0']       
+m_e                 = input_txt_parameters['m_e']       
+m_p                 = input_txt_parameters['m_p']     
+k_B                 = input_txt_parameters['k_B'] 
 
-density             = parameters['density']       # not sure to input or calculate
+L                   = input_txt_parameters['L']       
+NT                  = input_txt_parameters['NT']       
 
-InitialCondition    = parameters['InitialCondition']
+# density             = input_txt_parameters['density']       # not sure to input or calculate
 
-NG                  = parameters['NG']         # number of grids
+InitialCondition    = input_txt_parameters['InitialCondition']
 
-NT                  = parameters['NT']       # Total simulation time
-DT                  = parameters['DT']       # Time step
+NG                  = input_txt_parameters['NG']    
+DT                  = input_txt_parameters['DT']      
 
-IW                  = parameters['IW']
-scheme              = parameters['scheme']
-solver              = parameters['solver']
+IW                  = input_txt_parameters['IW']
+scheme              = input_txt_parameters['scheme']
+solver              = input_txt_parameters['solver']
 
-NTracker            = parameters['NTracker']          # Number of tracker particles
+NTracker            = input_txt_parameters['NTracker']       
 
-# .txt output files
-save_output         = parameters['save_output']
-output_decimal_places = parameters['output_Ndecimal_places']
+save_output                      = input_txt_parameters['save_output']   
+output_Ndecimal_places           = input_txt_parameters['output_Ndecimal_places']   
 
-# 
-save_animation      = parameters['save_animation']     # save animation of snapshots
-save_omegak         = parameters['save_omegak']       # save dispersion relation
+save_animation                   = input_txt_parameters['save_animation']    
+save_energy_history              = input_txt_parameters['save_energy_history']          
+save_momentum_change_history     = input_txt_parameters['save_momentum_change_history']    
+save_grid_history                = input_txt_parameters['save_grid_history']    
+save_selected_modes_history      = input_txt_parameters['save_selected_modes_history']    
+save_all_modes_history           = input_txt_parameters['save_all_modes_history']    
+save_tracker_particle_trajectory = input_txt_parameters['save_tracker_particle_trajectory']    
+save_omegak                      = input_txt_parameters['save_omegak']    
 
 # snapshot animations
-plot_animation      = parameters['plot_animation']  # Plot animation of snapshots
+plot_animation                       = input_txt_parameters['plot_animation']   
 
 # energy-time history 
-plot_energy_history = parameters['plot_energy_history']           # Plot history
-# energy_history_tlim= 0.,1.      # Separate by comma
-# energy_history_Elim= 0.,1.
+plot_energy_history                  = input_txt_parameters['plot_energy_history']   
+energy_history_tlim                  = input_txt_parameters['energy_history_tlim']   
+energy_history_Elim                  = input_txt_parameters['energy_history_Elim']   
 
 # momentum_change-time history 
-plot_momentum_change_history = parameters['plot_momentum_change_history'] # Plot history
-# momentum_change_history_tlim= 0.,1.      # Separate by comma
-# momentum_change_history_Elim= 0.,1.
+plot_momentum_change_history         = input_txt_parameters['plot_momentum_change_history']   
+momentum_change_history_tlim         = input_txt_parameters['momentum_change_history_tlim']   
+momentum_change_history_Elim         = input_txt_parameters['momentum_change_history_Elim']   
 
 # grid history 
-plot_grid_history = parameters['plot_grid_history']           # Plot history
-# grid_history_projection = 3d
-# grid_history_xlim= 0.,1.      # Separate by comma
-# grid_history_tlim= 0.,1.
+plot_grid_history                    = input_txt_parameters['plot_grid_history']
+grid_history_projection              = input_txt_parameters['grid_history_projection']
+grid_history_xlim                    = input_txt_parameters['grid_history_xlim']
+grid_history_tlim                    = input_txt_parameters['grid_history_tlim']
 
 # selected_mode history 
-plot_selected_modes_history = parameters['plot_selected_modes_history']           # Plot history
-selected_modes = parameters['selected_modes']
-plot_theoretical_growth_rate = parameters['plot_theoretical_growth_rate']
+plot_selected_modes_history          = input_txt_parameters['plot_selected_modes_history']
+selected_modes                       = input_txt_parameters['selected_modes']
+plot_theoretical_growth_rate         = input_txt_parameters['plot_theoretical_growth_rate']
+selected_mode_history_tlim           = input_txt_parameters['selected_mode_history_tlim']
+selected_mode_history_Alim           = input_txt_parameters['selected_mode_history_Alim']
 
-# all_mode history 
-plot_all_modes_history = parameters['plot_all_modes_history']           # Plot history
+# all_modes history 
+plot_all_modes_history               = input_txt_parameters['plot_all_modes_history']
+all_mode_history_tlim                = input_txt_parameters['all_mode_history_tlim']
+all_mode_history_klim                = input_txt_parameters['all_mode_history_klim']
 
 # tracker_particle_trajectory_history
-plot_trajectory     = parameters['plot_trajectory']  # Trajectory of tracker particle(s)
-# space='R-t','V-t','R-V'      
-# tlim=None
-# Rlim=None
-# Vlim=None
+plot_tracker_particle_trajectory     = input_txt_parameters['plot_tracker_particle_trajectory']   
+tracker_particle_trajectory_space    = input_txt_parameters['tracker_particle_trajectory_space']    
+tracker_particle_trajectory_tlim     = input_txt_parameters['tracker_particle_trajectory_tlim']   
+tracker_particle_trajectory_Rlim     = input_txt_parameters['tracker_particle_trajectory_Rlim']   
+tracker_particle_trajectory_Vlim     = input_txt_parameters['tracker_particle_trajectory_Vlim']   
 
 # dispersion relation
-plot_omegak         = parameters['plot_omegak']       # Plot dispersion relation
-plot_theoretical_dispersion_relation = parameters['plot_theoretical_dispersion_relation']
+plot_omegak                          = input_txt_parameters['plot_omegak']   
+plot_theoretical_dispersion_relation = input_txt_parameters['plot_theoretical_dispersion_relation']   
+dispersion_relation_klim             = input_txt_parameters['dispersion_relation_klim']   
+dispersion_relation_omegalim         = input_txt_parameters['dispersion_relation_omegalim']   
 
 # =============================================================================
 # Units for physical quantities
@@ -101,8 +108,9 @@ units=analysis.generate_units(UnitSystem)
 # =============================================================================
 # Load particles
 # =============================================================================
-m,q,r,v=build.load_particles(parameters)
-    
+m,q,r,v=build.load_particles(input_txt_parameters,species_parameters)
+N=len(m) # Total number of particles
+
 # =============================================================================
 # Derived parameters 
 # =============================================================================
@@ -117,17 +125,18 @@ t                   = np.arange(0.,NT*DT,DT) # np array for time axis
 omega               = 2.*np.pi*np.fft.rfftfreq(len(t),DT)
 domega              = omega[1]-omega[0]
 
+# =============================================================================
+# Plasma parameters
+# =============================================================================
 omega_plasma        = np.sqrt(((N/(2*L))*e**2)/(epsilon0*m_e)) # plasma frequency
 
-print(('Assuming half of N are electrons, other half are protons,\n'
-       +'plasma frequency = %.4f '+units['omega']
-       +',\nomega_plasma*DT = %.4f, total steps = %i\n')
+print(('plasma frequency = %.4f '+units['omega']
+        +',\nomega_plasma*DT = %.4f, total steps = %i\n')
       %(omega_plasma,omega_plasma*DT,NT))
 
 # lambda_debye        = np.sqrt((epsilon0*k_B*T)/((N/(2*L)*e**2))) # Deybe length
 # N_D                 = N/(2*L)*lambda_debye
-# print(('Assuming half of N are electrons, other half are protons,\n'+
-#       'Debye length = %.4f '+units['r']
+# print(('Debye length = %.4f '+units['r']
 #       +',\nDebye length/L = %.4f, number of particles in one Debye length = %.4f\n')
 #       %(lambda_debye,lambda_debye/L,N_D))
 
@@ -176,9 +185,11 @@ for step in range(len(t)):
                                               scheme,IW,DT,L,E_grid,step)
         
     # tracker particle trajectory & histories
-    # for i in np.random.choice(N,NTracker,replace=False):
-    #     R[i,step]=r[i]
-    #     V[i,step]=v[i]
+    Tracker_index=np.random.choice(N,NTracker,replace=False)
+    for i in range(len(Tracker_index)):
+        R[i,step]=r[Tracker_index[i]]
+        V[i,step]=v[Tracker_index[i]]
+        
     P[step]=np.sum(m*0.5*(v_old+v))
     E_F[step]=0.5*np.dot(phi_grid*dx,rho_grid)
     E_D[step]=np.sum(0.5*m*v*v_old)
@@ -186,6 +197,7 @@ for step in range(len(t)):
     phi_grid_history[:,step]=phi_grid
     E_grid_history[:,step]=E_grid
         
+    # Plot snapshot animation during simulation
     if plot_animation:
         NSP=2
         pause_time=0.01
@@ -196,7 +208,7 @@ for step in range(len(t)):
     # save output
     if save_output:
         input_output.output_to_file(step,t,N,m,q,r,v,NG,x_grid,rho_grid,phi_grid,E_grid,
-                                    InitialCondition,save_dir,units,output_decimal_places)
+                                    InitialCondition,save_dir,units,output_Ndecimal_places)
     
     print(('step = %d '+units['t']
            +', P = %+.3e'+units['Momentum']
@@ -206,7 +218,8 @@ for step in range(len(t)):
 # =============================================================================
 # Theory
 # =============================================================================
-theoretical_omega_of_k,theoretical_growth_rate=theory.dispersion_relation(parameters)
+theoretical_omega_of_k,theoretical_growth_rate=theory.dispersion_relation(input_txt_parameters,
+                                                                          species_parameters)
 
 # =============================================================================
 # Analysis    
@@ -239,7 +252,7 @@ if plot_all_modes_history:
     fig5=plotting.all_mode_history_plot(k, t, dk, DT, grid_kt, units)
     
 # tracker_particle_trajectory_history
-if plot_trajectory:
+if plot_tracker_particle_trajectory:
     fig6=plotting.tracker_particle_trajectory_plot(t, R, V, NTracker, units)
     
 # dispersion relation

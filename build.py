@@ -11,14 +11,16 @@ import numpy as np
 # Build m, q, r, v from parameters
 # =============================================================================
 
-def load_particles(parameters):
+def load_particles(input_txt_parameters,species_parameters):
     '''
     For generating the particle m, q, r, v np arrays from the parameters dictionary.
 
     Parameters
     ----------
-    parameters : dict
+    input_txt_parameters : dict
         Parameters read from `input.txt` using input_output.load_input(input_file_loc).
+    species_parameters: list
+        List of dicts, where each dict contains parameters for each particle species
 
     Returns
     -------
@@ -32,19 +34,66 @@ def load_particles(parameters):
         Initial velocity of each particle.
 
     '''
-    m_e=parameters['m_e']
-    m_p=parameters['m_p']
-    e=parameters['e']
-    k_B=parameters['k_B']
+    m_e=input_txt_parameters['m_e']
+    m_p=input_txt_parameters['m_p']
+    e=input_txt_parameters['e']
+    k_B=input_txt_parameters['k_B']
     
-    N=parameters['N']
-    L=parameters['L']
+    L=input_txt_parameters['L']
     
-    k=2.*np.pi/L
-    density=N/L
+    InitialCondition=input_txt_parameters['InitialCondition']
     
-    InitialCondition=parameters['InitialCondition']
+    k=2.*np.pi/L  # First (lowest) mode in the system (smallest k)
+    # density=N/L
     
+    m=np.array([])
+    q=np.array([])
+    r=np.array([])
+    v=np.array([])
+    for species in range(len(species_parameters)):
+        # Assign mass and charge to each particle
+        N=species_parameters[species]['N']
+        if species_parameters[species]['m']=='m_e':
+            m_species=m_e*np.ones(N)
+        elif species_parameters[species]['m']=='m_p':
+            m_species=m_p*np.ones(N)
+        else:
+            m_species=species_parameters[species]['m']*np.ones(N)
+            
+        if species_parameters[species]['q']=='e':
+            q_species=e*np.ones(N)
+        elif species_parameters[species]['q']=='-e':
+            q_species=-e*np.ones(N)
+        else:
+            q_species=species_parameters[species]['q']*np.ones(N)
+        # place particles in x-v phase space
+        # distribution      = Maxwellian # Used for choosing different initial velocity distribution function
+        v0         = species_parameters[species]['v0']
+        v_sigma    = species_parameters[species]['v_sigma']        # Velocity width (v0_sigma**2 ~ Temperature)
+        T          = species_parameters[species]['T']        # Temperature for a Maxwellian velocity distribution
+        
+        r_species=np.linspace(0.,L,N)
+        v_species=np.random.normal(v0,v_sigma,size=N)
+        
+        # excite mode in modes list
+        modes               = species_parameters[species]['Modes']     
+        X1                  = species_parameters[species]['X1']
+        V1                  = species_parameters[species]['V1']
+        THETAX              = species_parameters[species]['THETAX']
+        THETAV              = species_parameters[species]['THETAV']
+        
+        for mode in modes:
+            r_species+=X1*np.cos(mode*k*r_species+THETAX)
+            v_species+=V1*np.sin(mode*k*v_species+THETAV)
+            
+        # Periodic boundary condition
+        r_species=r_species%L
+        
+        # Append to the final m, q, r, v array
+        m=np.append(m,m_species)
+        q=np.append(q,q_species)
+        r=np.append(r,r_species)
+        v=np.append(v,v_species)
     # Species 1
     # N                   = 2000       # Number of particles
     # density             = 10.0       # not sure to input or calculate
@@ -72,45 +121,45 @@ def load_particles(parameters):
     #     r=np.array([L/4.,2*L/4.])
     #     v=np.array([0.,0.])
         
-    if InitialCondition=='Plasma_Oscillation':
-        A          = parameters['A']
-        modes      = parameters['Modes']
-        v0         = parameters['v0']
-        v_sigma    = parameters['v_sigma']
-        n0         = 0.5*N/L
+    # if InitialCondition=='Plasma_Oscillation':
+    #     A          = input_txt_parameters['A']
+    #     modes      = input_txt_parameters['Modes']
+    #     v0         = input_txt_parameters['v0']
+    #     v_sigma    = input_txt_parameters['v_sigma']
+    #     n0         = 0.5*N/L
         
-        # first half electrons, second half protons
-        m=np.ones(N)*m_e
-        m[N//2:]=m_p
-        q=-1.*np.ones(N)*e
-        q[N//2:]*=-1.
-        r=np.append(np.linspace(0.,L,N//2),np.linspace(0.,L,N//2))
-        v=np.append(np.random.normal(v0,v_sigma,size=(1,N//2)),np.zeros(N//2))
+    #     # first half electrons, second half protons
+    #     m=np.ones(N)*m_e
+    #     m[N//2:]=m_p
+    #     q=-1.*np.ones(N)*e
+    #     q[N//2:]*=-1.
+    #     r=np.append(np.linspace(0.,L,N//2),np.linspace(0.,L,N//2))
+    #     v=np.append(np.random.normal(v0,v_sigma,size=(1,N//2)),np.zeros(N//2))
         
         
-        # excite mode in modes list
-        for mode in modes:
-            r[:N//2]+=A/n0*np.sin(mode*k*r[:N//2])
-        r=r%L
+    #     # excite mode in modes list
+    #     for mode in modes:
+    #         r[:N//2]+=A/n0*np.sin(mode*k*r[:N//2])
+    #     r=r%L
     
-    if InitialCondition=='Two_Stream_Instability':
-        v0         = parameters['v0']     # velocity
-        v0_sigma   = parameters['v0_sigma']       # velocity width
-        charge     = parameters['charge']
-        A          = parameters['A']
-        modes      = parameters['Modes']
+    # if InitialCondition=='Two_Stream_Instability':
+    #     v0         = parameters['v0']     # velocity
+    #     v0_sigma   = parameters['v0_sigma']       # velocity width
+    #     charge     = parameters['charge']
+    #     A          = parameters['A']
+    #     modes      = parameters['Modes']
         
-        m=np.ones(N)*m_e 
-        q=-1*np.ones(N)*e
-        if charge == 'opposite':
-            q[N//2:]*=-1.
-        r=np.random.random(N)*L
-        v=np.append(np.random.normal(v0,v0_sigma,size=(1,N//2)),
-                    np.random.normal(-v0,v0_sigma,size=(1,N//2)))
+    #     m=np.ones(N)*m_e 
+    #     q=-1*np.ones(N)*e
+    #     if charge == 'opposite':
+    #         q[N//2:]*=-1.
+    #     r=np.random.random(N)*L
+    #     v=np.append(np.random.normal(v0,v0_sigma,size=(1,N//2)),
+    #                 np.random.normal(-v0,v0_sigma,size=(1,N//2)))
         
-        for mode in modes:
-            r[:N//2]+=A*mode/density*np.sin(mode*k*r[:N//2])
-        r=r%L
+    #     for mode in modes:
+    #         r[:N//2]+=A*mode/density*np.sin(mode*k*r[:N//2])
+    #     r=r%L
         
     # if InitialCondition=='Single Beam':
     #     v0         = 1.0        # velocity
@@ -146,3 +195,21 @@ def load_particles(parameters):
         
     return m,q,r,v
 
+# =============================================================================
+# 
+# =============================================================================
+if __name__=='__main__':
+    import input_output 
+    # input_folder_loc=sys.argv[1] # For running in terminal
+    input_folder_loc='simulation_results/EXAMPLE/inputs' # for running in IDE (ex:Spyder)
+    input_txt_parameters, save_dir, species_parameters = input_output.load_input(input_folder_loc)
+    
+    m,q,r,v=load_particles(input_txt_parameters,species_parameters)
+    
+    # from analysis_and_plotting import analysis
+    # UnitSystem          = input_txt_parameters['UnitSystem']
+    # units=analysis.generate_units(UnitSystem)
+    
+    # from analysis_and_plotting import plotting
+    # N = input_txt_parameters['N']      # number of particles
+    # plotting.phase_space_plot(r,v,N,units)

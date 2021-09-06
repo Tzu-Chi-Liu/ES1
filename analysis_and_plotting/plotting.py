@@ -21,8 +21,9 @@ def energy_history_plot(t,E_D,E_T,E_F,units,tlim=None,Elim=None):
         ax.set_ylim(Elim)
     ax.set_xlabel('Time t '+units['t'])
     ax.set_ylabel('Energy E '+units['Energy'])
-    ax.legend(bbox_to_anchor=(0,1.01,1,0.2),loc='best'
-               ,mode='expand',borderaxespad=0.,ncol=4)
+    ax.legend(loc='best')
+    # ax.legend(bbox_to_anchor=(0,1.01,1,0.2),loc='best'
+    #            ,mode='expand',borderaxespad=0.,ncol=4)
     ax.set_title('Energy History',y=1.07)
     
     return fig, ax
