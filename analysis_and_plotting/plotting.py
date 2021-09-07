@@ -8,16 +8,16 @@ Created on Fri Sep  3 02:00:29 2021
 import numpy as np
 import matplotlib.pyplot as plt
 
-def energy_history_plot(t,E_D,E_T,E_F,units,tlim=None,Elim=None):
+def energy_history_plot(t,E_D,E_T,E_F,units,tlim='default',Elim='default'):
     fig,ax=plt.subplots()
     ax.plot(t,E_D,label='Drift')
     ax.plot(t,E_T,label='Thermal')
     ax.plot(t,E_F,label='Field')
     ax.plot(t,E_D+E_T+E_F,label='Total')
     
-    if tlim is not None:
+    if tlim != 'default':
         ax.set_xlim(tlim)
-    if Elim is not None:
+    if Elim != 'default':
         ax.set_ylim(Elim)
     ax.set_xlabel('Time t '+units['t'])
     ax.set_ylabel('Energy E '+units['Energy'])
@@ -28,41 +28,35 @@ def energy_history_plot(t,E_D,E_T,E_F,units,tlim=None,Elim=None):
     
     return fig, ax
 
-def momentum_change_history_plot(t,P,units,tlim=None,Plim=None):
+def momentum_change_history_plot(t,P,units,tlim='default',Plim='default'):
     fig,ax=plt.subplots()
-    ax.plot(t,P-P[0])
+    ax.plot(t,P)
     
-    if tlim is not None:
+    if tlim != 'default':
         ax.set_xlim(tlim)
-    if Plim is not None:
+    if Plim != 'default':
         ax.set_ylim(Plim)
     ax.set_xlabel('Time t '+units['t'])
-    ax.set_ylabel(r'Total momentum change $\Delta P$ '+units['Momentum'])
+    ax.set_ylabel(r'Total momentum change fraction $\frac{\Delta P}{\sum \left|P\right|}$ '
+                  +units['Momentum'])
     ax.set_title('Total Momentum Change History')
     return fig, ax
 
-def grid_history_plot(x_grid,t,dx,DT,grid_history,units,projection='2d',xlim=None,tlim=None):
+def grid_history_plot(x_grid,t,dx,DT,grid_history,units,
+                      projection='2d',tlim='default',xlim='default'):
     fig=plt.figure()
     if projection=='2d':
         ax=fig.add_subplot()
         grid_history=grid_history[::-1,:] # So that (x = 0, t = 0) is at bottom left corner
-        # if xlim is not None:
-        #     pos=ax.imshow(grid_history.T[xlim[0]:xlim[1],tlim[0]:tlim[1]],
-        #                   extent=(x[xlim[0]]-0.5*dx,x[xlim[1]]+0.5*dx,
-        #                           t[tlim[0]]-0.5*DT,t[tlim[1]]+0.5*DT))
-        # if tlim is not None:
-        #     pos=ax.imshow(grid_history.T[xlim[0]:xlim[1],tlim[0]:tlim[1]],
-        #                   extent=(x[xlim[0]]-0.5*dx,x[xlim[1]]+0.5*dx,
-        #                           t[tlim[0]]-0.5*DT,t[tlim[1]]+0.5*DT))
-        if ((xlim is not None) and (tlim is not None)):
-            pos=ax.imshow(grid_history[xlim[0]:xlim[1],tlim[0]:tlim[1]],
-                          extent=(t[tlim[0]]-0.5*DT,t[tlim[1]]+0.5*DT,
-                                  x_grid[xlim[0]]-0.5*dx,x_grid[xlim[1]]+0.5*dx))
-        else:
-            pos=ax.imshow(grid_history,
-                          extent=(t[0]-0.5*DT,t[-1]+0.5*DT,
-                                  x_grid[0]-0.5*dx,x_grid[-1]+0.5*dx))
-            
+        
+        pos=ax.imshow(grid_history,
+                      extent=(t[0]-0.5*DT,t[-1]+0.5*DT,
+                              x_grid[0]-0.5*dx,x_grid[-1]+0.5*dx))
+        
+        if tlim != 'default':
+            ax.set_xlim(tlim)
+        if xlim != 'default':
+            ax.set_ylim(xlim)
         cbar=fig.colorbar(pos,ax=ax)
         cbar.set_label('Electric field E '+units['E_grid'],rotation=90)
         ax.set_xlabel('Time t '+units['t'])
@@ -73,9 +67,9 @@ def grid_history_plot(x_grid,t,dx,DT,grid_history,units,projection='2d',xlim=Non
         x_mesh,T_mesh=np.meshgrid(x_grid,t)
         ax.plot_surface(T_mesh,x_mesh,grid_history.T)
     
-        if xlim is not None:
+        if xlim != 'default':
             ax.set_xlim(xlim)
-        if tlim is not None:
+        if tlim != 'default':
             ax.set_ylim(tlim)
         ax.set_xlabel('Time t '+units['t'])
         ax.set_ylabel('Position x '+units['r'])
@@ -85,62 +79,67 @@ def grid_history_plot(x_grid,t,dx,DT,grid_history,units,projection='2d',xlim=Non
     
     return fig, ax
 
-def selected_mode_history_plot(k,t,grid_kt,selected_modes,
+def selected_modes_history_plot(k,t,grid_kt,selected_modes,
                                plot_theoretical_growth_rate,theoretical_growth_rate,units,
-                               part='abs',scale='linear',klim=None,tlim=None):
+                               part='abs',scale='linear',tlim='default',Alim='default'):
     fig=plt.figure(figsize=(8,8))
     if part=='abs':
-        grid_kt=np.abs(grid_kt)
+        grid_kt=2.*np.abs(grid_kt) # Because c_n = 0.5*(a_n-i*b_n)
     elif part=='real':
-        grid_kt=np.real(grid_kt)
+        grid_kt=2.*np.real(grid_kt) # Because c_n = 0.5*(a_n-i*b_n)
     elif part=='imag':
-        grid_kt=np.imag(grid_kt)
+        grid_kt=2.*np.imag(grid_kt) # Because c_n = 0.5*(a_n-i*b_n)
+        
     for index in range(len(selected_modes)):
         ax=fig.add_subplot(len(selected_modes),1,index+1)
-        ax.plot(t[:],grid_kt[selected_modes[index],:],label='Simulation result')
+        ax.plot(t,grid_kt[selected_modes[index],:],label='Simulation result')
         if plot_theoretical_growth_rate:
             growth_rate_label='Theoretical growth rate = %.3f'\
                                %theoretical_growth_rate[selected_modes[index]]\
                                +' '+units['omega']
-            ax.plot(t[:],np.abs(grid_kt[selected_modes[index],0])
+            ax.plot(t[:],grid_kt[selected_modes[index],0]
                     *np.exp(theoretical_growth_rate[selected_modes[index]]*t[:]),
                     label=growth_rate_label)
            
             
-        title='Mode '+str(selected_modes[index])
-        if klim is not None:
-            ax.set_xlim(klim)
-        if tlim is not None:
-            ax.set_ylim(tlim)
+        title='Mode '+str(selected_modes[index])\
+                +', k = '+str(k[selected_modes[index]])+' '+units['k']
+        if tlim != 'default':
+            ax.set_xlim(tlim)
+        if Alim != 'default':
+            ax.set_ylim(Alim)
         ax.set_xlabel('Time t '+units['t'])
         ax.set_ylabel('Amplitude '+units['arb. unit'])
         ax.set_yscale(scale)
         ax.legend(loc='best')
         ax.set_title(title)
         
+    plt.suptitle('Mode Amplitude History')
     plt.tight_layout()
     return fig, ax
 
-def all_mode_history_plot(k,t,dk,DT,grid_kt,units,part='abs',klim=None,tlim=None):
+def all_modes_history_plot(k,t,dk,DT,grid_kt,units,
+                           part='abs',scale='linear',tlim='default',klim='default'):
     fig,ax=plt.subplots()
     grid_kt=grid_kt[::-1,:] # So that k=0 in in the lowest row
+    grid_kt=grid_kt[1:-1,:] # Don't draw k=0 and k= np.pi/dx because these two rows==0,
+                            # and taking log of 0 is -inf
+    
     if part=='abs':
-        grid_kt=np.abs(grid_kt)
+        grid_kt=2.*np.abs(grid_kt) # Because c_n = 0.5*(a_n-i*b_n)
     elif part=='real':
-        grid_kt=np.real(grid_kt)
+        grid_kt=2.*np.real(grid_kt) # Because c_n = 0.5*(a_n-i*b_n)
     elif part=='imag':
-        grid_kt=np.imag(grid_kt)
-    if ((klim is not None) and (tlim is not None)):
-        pos=ax.imshow(grid_kt[klim[0]:klim[1],tlim[0]:tlim[1]],
-                      extent=(t[tlim[0]]-0.5*DT,t[tlim[1]]+0.5*DT,
-                              k[klim[0]]-0.5*dk,k[klim[1]]+0.5*dk))
-    else:
-        pos=ax.imshow(grid_kt,extent=(t[0]-0.5*DT,t[-1]+0.5*DT,k[0]-0.5*dk,k[-1]+0.5*dk))
+        grid_kt=2.*np.imag(grid_kt) # Because c_n = 0.5*(a_n-i*b_n)
+    if scale=='log':
+        grid_kt=np.log10(2.*np.abs(grid_kt))
+    
+    pos=ax.imshow(grid_kt,extent=(t[0]-0.5*DT,t[-1]+0.5*DT,k[1]-0.5*dk,k[-2]+0.5*dk))
         
-    if klim is not None:
-        ax.set_xlim(klim)
-    if tlim is not None:
-        ax.set_ylim(tlim)
+    if tlim != 'default':
+        ax.set_xlim(tlim)
+    if klim != 'default':
+        ax.set_ylim(klim)
         
     cbar=fig.colorbar(pos,ax=ax)
     ax.set_xlabel(r'Time $t$ '+units['t'])
@@ -149,22 +148,25 @@ def all_mode_history_plot(k,t,dk,DT,grid_kt,units,part='abs',klim=None,tlim=None
     # ax.set_xlabel('Step #')
     # ax.set_ylabel('Mode number')
     ax.set_title('Mode Amplitue History')
-    cbar.set_label('Amplitude '+units['arb. unit'],rotation=90)
+    if scale=='linear':
+        cbar.set_label('Amplitude '+units['arb. unit'],rotation=90)
+    elif scale=='log':
+        cbar.set_label(r'$\log_{10}(Amplitude)$ '+units['arb. unit'],rotation=90)
     plt.tight_layout()
     
     return fig, ax
 
-def tracker_particle_trajectory_plot(t,R,V,Tracker,units,
-                                     space=['R-t'],tlim=None,Rlim=None,Vlim=None):
+def tracker_particle_trajectory_plot(t,R,V,NTracker,units,
+                                     space=['R-t'],tlim='default',Rlim='default',Vlim='default'):
     fig=plt.figure()
     if 'R-t' in space:
         ax=fig.add_subplot(len(space),1,space.index('R-t')+1)
-        for particle in range(Tracker):
+        for particle in range(NTracker):
             ax.plot(t,R[particle,:],label='Particle '+str(particle+1))
         
-        if tlim is not None:
+        if tlim != 'default':
             ax.set_xlim(tlim)
-        if Rlim is not None:
+        if Rlim != 'default':
             ax.set_ylim(Rlim)
         ax.set_xlabel('Time t '+units['t'])
         ax.set_ylabel('Position r '+units['r'])
@@ -173,12 +175,12 @@ def tracker_particle_trajectory_plot(t,R,V,Tracker,units,
         
     if 'V-t' in space:
         ax=fig.add_subplot(len(space),1,space.index('V-t')+1)
-        for particle in range(Tracker):
+        for particle in range(NTracker):
             ax.plot(t,V[particle,:],label='Particle '+str(particle+1))
         
-        if tlim is not None:
+        if tlim != 'default':
             ax.set_xlim(tlim)
-        if Vlim is not None:
+        if Vlim != 'default':
             ax.set_ylim(Vlim)
         ax.set_xlabel('Time t '+units['t'])
         ax.set_ylabel('Velocity v '+units['v'])
@@ -187,18 +189,20 @@ def tracker_particle_trajectory_plot(t,R,V,Tracker,units,
         
     if 'R-V' in space:
         ax=fig.add_subplot(len(space),1,space.index('R-V')+1)
-        for particle in range(Tracker):
+        for particle in range(NTracker):
             ax.plot(R[particle,:],V[particle,:],label='Particle '+str(particle+1))
         
-        if Rlim is not None:
+        if Rlim != 'default':
             ax.set_xlim(Rlim)
-        if Vlim is not None:
+        if Vlim != 'default':
             ax.set_ylim(Vlim)
         ax.set_xlabel('Position r '+units['r'])
         ax.set_ylabel('Velocity v'+units['v'])
         ax.legend(loc='best')
         ax.set_title('R-V Plot')
         
+    plt.tight_layout()
+    
     return fig, ax
 
 # =============================================================================
@@ -206,50 +210,64 @@ def tracker_particle_trajectory_plot(t,R,V,Tracker,units,
 # =============================================================================
 def dispersion_relation_plot(k,omega,dk,domega,grid_omegak,units,
                              plot_theoretical_dispersion_relation,theoretical_omega_of_k,
-                             part='abs',scale='linear',klim=None,omegalim=None):
+                             part='abs',scale='linear',klim='default',omegalim='default'):
     fig,ax=plt.subplots()
     grid_omegak=grid_omegak.T # So that the horizontal axis is k and the vertical axis is omega
     grid_omegak=grid_omegak[::-1,:] # So that (k = 0, omega = 0) is at bottom left corner
-    
+    grid_omegak=grid_omegak[:,1:-1] # Don't draw k=0 and k= np.pi/dx because these two rows==0,
+                                    # and taking log of 0 is -inf
+
     if part=='abs':
-        grid_omegak=np.abs(grid_omegak)
+        grid_omegak=2.*np.abs(grid_omegak) # Because c_n = 0.5*(a_n-i*b_n)
     elif part=='real':
-        grid_omegak=np.real(grid_omegak)
+        grid_omegak=2.*np.real(grid_omegak) # Because c_n = 0.5*(a_n-i*b_n)
     elif part=='imag':
-        grid_omegak=np.imag(grid_omegak)
+        grid_omegak=2.*np.imag(grid_omegak) # Because c_n = 0.5*(a_n-i*b_n)
     if scale=='log':
-        grid_omegak=np.log(np.abs(grid_omegak))
+        grid_omegak=np.log10(2.*np.abs(grid_omegak))
         
-    if ((klim is not None) and (omegalim is not None)):
-        pos=ax.imshow(grid_omegak[klim[0]:klim[1],omegalim[0]:omegalim[1]],
-                      extent=(k[klim[0]]-0.5*dk,k[klim[1]]+0.5*dk,
-                              omega[omegalim[0]]-0.5*domega,omega[omegalim[1]]+0.5*domega))
-    else:
-        pos=ax.imshow(grid_omegak,extent=(k[0]-0.5*dk,k[-1]+0.5*dk,
-                                          omega[0]-0.5*domega,omega[-1]+0.5*domega))
+    pos=ax.imshow(grid_omegak,extent=(k[1]-0.5*dk,k[-2]+0.5*dk,
+                                      omega[0]-0.5*domega,omega[-1]+0.5*domega))
     cbar=fig.colorbar(pos,ax=ax)
-    ax.set_xlabel(r'Wave number $k$ '+units['k'])
-    ax.set_ylabel(r'Angular frequency $\omega$ '+units['omega'])
-    ax.set_title('Dispersion Relation')
-    cbar.set_label('Amplitude '+units['arb. unit'],rotation=90)
     
     # plot theoretical dispersion relation    
     if plot_theoretical_dispersion_relation:
-        ax.plot(k,theoretical_omega_of_k,'red',lw=0.5,label='Theoretical')
+        for i in range(len(theoretical_omega_of_k)):
+            ax.plot(k,theoretical_omega_of_k[i],'red',lw=0.5,label='Theoretical')
         ax.legend(loc='best')
+    
+    if klim != 'default':
+        ax.set_xlim(klim)
+    if omegalim != 'default':
+        ax.set_ylim(omegalim)
+    ax.set_xlabel(r'Wave number $k$ '+units['k'])
+    ax.set_ylabel(r'Angular frequency $\omega$ '+units['omega'])
+    ax.set_title('Dispersion Relation')
+    if scale=='linear':
+        cbar.set_label('Amplitude '+units['arb. unit'],rotation=90)
+    elif scale=='log':
+        cbar.set_label(r'$\log_{10}(Amplitude)$ '+units['arb. unit'],rotation=90)
 
     return fig, ax 
 
-def phase_space_plot(r,v,N,units):
+def phase_space_plot(species_parameters,r,v,units):
     fig,ax=plt.subplots()
-    ax.scatter(r[:N//2],v[:N//2],fc=(1,0,0,0.3),s=1)
-    ax.scatter(r[N//2:],v[N//2:],fc=(0,0,1,0.3),s=1)
+    particle_counter=0
+
+    for species in range(len(species_parameters)):
+        ax.scatter(r[particle_counter:particle_counter+species_parameters[species]['N']],
+                   v[particle_counter:particle_counter+species_parameters[species]['N']],
+                   s=1,alpha=0.5,label='species '+str(species+1))
+        particle_counter+=species_parameters[species]['N']
     # ax1.hexbin(r,v,gridsize=200)
-    ax.scatter(r[N//4],v[N//4],c='black',s=30,lw=1,edgecolor='white') # tracker 1
-    ax.scatter(r[-1],v[-1],c='white',s=30,lw=1,edgecolor='black') # tracker 2
     
-    ax.set_xlabel('position x '+units['r'])
-    ax.set_ylabel('velocity v '+units['v'])
+    # Tracker particles
+    # ax.scatter(r[N//4],v[N//4],c='black',s=30,lw=1,edgecolor='white') # tracker 1
+    # ax.scatter(r[-1],v[-1],c='white',s=30,lw=1,edgecolor='black') # tracker 2
+    
+    ax.set_xlabel('Position x '+units['r'])
+    ax.set_ylabel('Velocity v '+units['v'])
+    ax.legend(loc='best')
     ax.set_title('Phase Space')
     ax.set_xlim()
     ax.set_ylim()
@@ -274,9 +292,17 @@ def grid_plot(x,grid,units):
     fig,ax=plt.subplots()
     ax.plot(x,grid)
     ax.set_xlabel('position x '+units['r'])
-    ax.set_ylabel(r'charge density $\rho$ '+units['rho_grid'])
-    ax.set_title('Charge Density')
+    ax.set_ylabel(r' $\$ '+units[''])
+    ax.set_title('')
     return fig, ax
+
+def history_frequency_plot(omega,FFTspectrum,units):
+    fig,ax=plt.subplots()
+    ax.plot(omega,FFTspectrum)
+    ax.set_xlabel(r'Frequency $omega$ '+units['omega'])
+    ax.set_ylabel('Amplitude '+units['arb. units'])
+    ax.set_title('')
+    return fig,ax
 
 # =============================================================================
 # 

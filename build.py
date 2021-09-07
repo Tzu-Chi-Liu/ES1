@@ -72,7 +72,7 @@ def load_particles(input_txt_parameters,species_parameters):
         v_sigma    = species_parameters[species]['v_sigma']        # Velocity width (v0_sigma**2 ~ Temperature)
         T          = species_parameters[species]['T']        # Temperature for a Maxwellian velocity distribution
         
-        r_species=np.linspace(0.,L,N)
+        r_species=np.linspace(0.,L,N,endpoint=False)
         v_species=np.random.normal(v0,v_sigma,size=N)
         
         # excite mode in modes list
@@ -94,53 +94,13 @@ def load_particles(input_txt_parameters,species_parameters):
         q=np.append(q,q_species)
         r=np.append(r,r_species)
         v=np.append(v,v_species)
-    # Species 1
-    # N                   = 2000       # Number of particles
-    # density             = 10.0       # not sure to input or calculate
-    # WP
-    # WC
-    # QM
-    
-    # # distribution      = Maxwellian # Used for choosing different initial velocity distribution function
-    # v0                  = 
-    # v_sigma             = 0.0        # Velocity width (v0_sigma**2 ~ Temperature)
-    # T                   = 0.1        # Temperature for a Maxwellian velocity distribution
-    
-    # Modes               = 1:50:1     # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
-    # X1                  = 
-    # V1                  = 
-    # THETAX              = 
-    # THETAV              = 
-    
-
-    
+ 
     # if InitialCondition=='Particle Pair Oscillation':
     #     N=2
     #     m=np.array([m_e,m_e])
     #     q=np.array([e,-e])
     #     r=np.array([L/4.,2*L/4.])
     #     v=np.array([0.,0.])
-        
-    # if InitialCondition=='Plasma_Oscillation':
-    #     A          = input_txt_parameters['A']
-    #     modes      = input_txt_parameters['Modes']
-    #     v0         = input_txt_parameters['v0']
-    #     v_sigma    = input_txt_parameters['v_sigma']
-    #     n0         = 0.5*N/L
-        
-    #     # first half electrons, second half protons
-    #     m=np.ones(N)*m_e
-    #     m[N//2:]=m_p
-    #     q=-1.*np.ones(N)*e
-    #     q[N//2:]*=-1.
-    #     r=np.append(np.linspace(0.,L,N//2),np.linspace(0.,L,N//2))
-    #     v=np.append(np.random.normal(v0,v_sigma,size=(1,N//2)),np.zeros(N//2))
-        
-        
-    #     # excite mode in modes list
-    #     for mode in modes:
-    #         r[:N//2]+=A/n0*np.sin(mode*k*r[:N//2])
-    #     r=r%L
     
     # if InitialCondition=='Two_Stream_Instability':
     #     v0         = parameters['v0']     # velocity
@@ -206,10 +166,10 @@ if __name__=='__main__':
     
     m,q,r,v=load_particles(input_txt_parameters,species_parameters)
     
-    # from analysis_and_plotting import analysis
-    # UnitSystem          = input_txt_parameters['UnitSystem']
-    # units=analysis.generate_units(UnitSystem)
+    from analysis_and_plotting import analysis
+    UnitSystem          = input_txt_parameters['UnitSystem']
+    units=analysis.generate_units(UnitSystem)
     
-    # from analysis_and_plotting import plotting
-    # N = input_txt_parameters['N']      # number of particles
-    # plotting.phase_space_plot(r,v,N,units)
+    from analysis_and_plotting import plotting
+    plotting.phase_space_plot(species_parameters,r,v,units)
+    

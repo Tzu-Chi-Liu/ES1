@@ -67,7 +67,7 @@ energy_history_Elim                  = input_txt_parameters['energy_history_Elim
 # momentum_change-time history 
 plot_momentum_change_history         = input_txt_parameters['plot_momentum_change_history']   
 momentum_change_history_tlim         = input_txt_parameters['momentum_change_history_tlim']   
-momentum_change_history_Elim         = input_txt_parameters['momentum_change_history_Elim']   
+momentum_change_history_Plim         = input_txt_parameters['momentum_change_history_Plim']   
 
 # grid history 
 plot_grid_history                    = input_txt_parameters['plot_grid_history']
@@ -79,11 +79,15 @@ grid_history_tlim                    = input_txt_parameters['grid_history_tlim']
 plot_selected_modes_history          = input_txt_parameters['plot_selected_modes_history']
 selected_modes                       = input_txt_parameters['selected_modes']
 plot_theoretical_growth_rate         = input_txt_parameters['plot_theoretical_growth_rate']
+selected_modes_part                  = input_txt_parameters['selected_modes_part']
+selected_modes_scale                 = input_txt_parameters['selected_modes_scale']
 selected_mode_history_tlim           = input_txt_parameters['selected_mode_history_tlim']
 selected_mode_history_Alim           = input_txt_parameters['selected_mode_history_Alim']
 
 # all_modes history 
 plot_all_modes_history               = input_txt_parameters['plot_all_modes_history']
+all_modes_part                       = input_txt_parameters['all_modes_part']
+all_modes_scale                      = input_txt_parameters['all_modes_scale']
 all_mode_history_tlim                = input_txt_parameters['all_mode_history_tlim']
 all_mode_history_klim                = input_txt_parameters['all_mode_history_klim']
 
@@ -96,7 +100,9 @@ tracker_particle_trajectory_Vlim     = input_txt_parameters['tracker_particle_tr
 
 # dispersion relation
 plot_omegak                          = input_txt_parameters['plot_omegak']   
-plot_theoretical_dispersion_relation = input_txt_parameters['plot_theoretical_dispersion_relation']   
+plot_theoretical_dispersion_relation = input_txt_parameters['plot_theoretical_dispersion_relation'] 
+dispersion_relation_part             = input_txt_parameters['dispersion_relation_part']
+dispersion_relation_scale            = input_txt_parameters['dispersion_relation_scale']  
 dispersion_relation_klim             = input_txt_parameters['dispersion_relation_klim']   
 dispersion_relation_omegalim         = input_txt_parameters['dispersion_relation_omegalim']   
 
@@ -130,8 +136,8 @@ domega              = omega[1]-omega[0]
 # =============================================================================
 omega_plasma        = np.sqrt(((N/(2*L))*e**2)/(epsilon0*m_e)) # plasma frequency
 
-print(('plasma frequency = %.4f '+units['omega']
-        +',\nomega_plasma*DT = %.4f, total steps = %i\n')
+print(('plasma frequency ω_p = %.4f '+units['omega']
+        +',\nω_p*DT = %.4f, total steps NT = %i\n')
       %(omega_plasma,omega_plasma*DT,NT))
 
 # lambda_debye        = np.sqrt((epsilon0*k_B*T)/((N/(2*L)*e**2))) # Deybe length
@@ -147,6 +153,7 @@ R     = np.zeros((NTracker,len(t))) # tracker particle phase space trajectory
 V     = np.zeros((NTracker,len(t)))
 
 P     = np.zeros(len(t)) # total momentum
+P_abs = np.zeros(len(t)) # Sum of magnitudes of momentum for each particle
 E_D   = np.zeros(len(t)) # drift kinetic energy
 E_T   = np.zeros(len(t)) # thermal kinetic energy
 E_F   = np.zeros(len(t)) # field energy
@@ -190,9 +197,35 @@ for step in range(len(t)):
         R[i,step]=r[Tracker_index[i]]
         V[i,step]=v[Tracker_index[i]]
         
+    # Total momentum history
     P[step]=np.sum(m*0.5*(v_old+v))
-    E_F[step]=0.5*np.dot(phi_grid*dx,rho_grid)
-    E_D[step]=np.sum(0.5*m*v*v_old)
+    P_abs[step]=np.sum(m*0.5*np.abs(v_old+v))
+    
+    # Field energy history
+    # E_F[step]=0.5*np.dot(phi_grid,rho_grid)*dx
+    E_F[step]=0.5*np.real(np.dot(np.fft.fft(phi_grid),
+                                 np.conjugate(np.fft.fft(rho_grid))))*dx/NG
+    # E_F[step]=0.5*epsilon0*np.dot(E_grid,E_grid)*dx
+    
+    # Particle drift and thermal energy histories
+    particle_counter=0
+    for species in range(len(species_parameters)):
+        N_species=species_parameters[species]['N']
+        m_species=species_parameters[species]['m']
+        avg_v_drift=np.mean(0.5*(v[particle_counter:particle_counter+N_species]
+                                  +v_old[particle_counter:particle_counter+N_species]))
+        E_D_species=N_species*0.5*m_species*avg_v_drift**2.
+        E_T_species=np.sum(0.5*m[particle_counter:particle_counter+N_species]\
+                          *v[particle_counter:particle_counter+N_species]
+                          *v_old[particle_counter:particle_counter+N_species])-E_D_species
+            
+        E_D[step]+=E_D_species
+        E_T[step]+=E_T_species
+        particle_counter+=N_species
+        
+    # E_D[step]=np.sum(0.5*m*v*v_old)
+    
+    # Grid histories
     rho_grid_history[:,step]=rho_grid
     phi_grid_history[:,step]=phi_grid
     E_grid_history[:,step]=E_grid
@@ -231,33 +264,53 @@ grid_omegak=analysis.grid_xt_to_omegak(k,E_grid_history)
 # Plotting
 # =============================================================================
 if plot_energy_history:
-    fig1=plotting.energy_history_plot(t,E_D,E_T,E_F,units)
+    fig1=plotting.energy_history_plot(t,E_D,E_T,E_F,units,
+                                      tlim=energy_history_tlim,Elim=energy_history_Elim)
 
 # momentum_change-time history 
 if plot_momentum_change_history:
-    fig2=plotting.momentum_change_history_plot(t, P, units)
+    fig2=plotting.momentum_change_history_plot(t, (P-P[0])/P_abs, units,
+                                               tlim=momentum_change_history_tlim,
+                                               Plim=momentum_change_history_Plim)
 
 # grid history 
 if plot_grid_history:
-    fig3=plotting.grid_history_plot(x_grid, t, dx, DT, E_grid_history, units)
+    fig3=plotting.grid_history_plot(x_grid, t, dx, DT, E_grid_history, 
+                                    units,projection=grid_history_projection,
+                                    xlim=grid_history_xlim,tlim=grid_history_tlim)
     
 # selected_mode history 
 if plot_selected_modes_history:
-    fig4=plotting.selected_mode_history_plot(k, t, grid_kt, selected_modes, 
-                                             plot_theoretical_growth_rate, 
-                                             theoretical_growth_rate, units)
+    fig4=plotting.selected_modes_history_plot(k, t, grid_kt, selected_modes, 
+                                              plot_theoretical_growth_rate, 
+                                              theoretical_growth_rate, units,
+                                              part=selected_modes_part,
+                                              scale=selected_modes_scale,
+                                              tlim=selected_mode_history_tlim,
+                                              Alim=selected_mode_history_Alim)
 
 # all_modes history 
 if plot_all_modes_history:
-    fig5=plotting.all_mode_history_plot(k, t, dk, DT, grid_kt, units)
+    fig5=plotting.all_modes_history_plot(k, t, dk, DT, grid_kt, units,
+                                         part=all_modes_part,scale=all_modes_scale,
+                                         tlim=all_mode_history_tlim,
+                                         klim=all_mode_history_klim)
     
 # tracker_particle_trajectory_history
 if plot_tracker_particle_trajectory:
-    fig6=plotting.tracker_particle_trajectory_plot(t, R, V, NTracker, units)
+    fig6=plotting.tracker_particle_trajectory_plot(t, R, V, NTracker, units,
+                                                   space=tracker_particle_trajectory_space,
+                                                   tlim=tracker_particle_trajectory_tlim,
+                                                   Rlim=tracker_particle_trajectory_Rlim,
+                                                   Vlim=tracker_particle_trajectory_Vlim)
     
 # dispersion relation
 if plot_omegak:
     fig7=plotting.dispersion_relation_plot(k, omega, dk, domega, 
                                            grid_omegak, units, 
                                            plot_theoretical_dispersion_relation, 
-                                           theoretical_omega_of_k)
+                                           theoretical_omega_of_k,
+                                           part=dispersion_relation_part,
+                                           scale=dispersion_relation_scale,
+                                           klim=dispersion_relation_klim,
+                                           omegalim=dispersion_relation_omegalim)

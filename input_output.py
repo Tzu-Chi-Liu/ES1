@@ -93,6 +93,16 @@ def load_input(input_folder_loc):
                     os.mkdir(save_dir)
                     
         elif 'species' in filename:
+            if parameters['m']=='m_e':
+                parameters['m']=input_txt_parameters['m_e']
+            elif parameters['m']=='m_p':
+                parameters['m']=input_txt_parameters['m_p']
+
+            if parameters['q']=='e':
+                parameters['q']=input_txt_parameters['e']
+            elif parameters['q']=='-e':
+                parameters['q']=-input_txt_parameters['e']
+                
             species_parameters.append(parameters)
     
     return input_txt_parameters, save_dir, species_parameters
@@ -153,15 +163,14 @@ if __name__=='__main__':
     # input_folder_loc=sys.argv[1] # For running in terminal
     input_folder_loc='simulation_results/EXAMPLE/inputs' # for running in IDE (ex:Spyder)
     input_txt_parameters, save_dir, species_parameters = load_input(input_folder_loc)
-    
-    print('input_txt_parameters: ')
-    for key in input_txt_parameters.keys():
-        print(type(input_txt_parameters[key]),key+':',input_txt_parameters[key])
-        
-    print('\nsave_dir: ')
+    print('save_dir: ')
     print(save_dir)
     
-    print('\nNSP =',len(species_parameters))
+    print('\ninput_txt_parameters: ')
+    for key in input_txt_parameters.keys():
+        print(type(input_txt_parameters[key]),key+':',input_txt_parameters[key])
+    
+    print('\nNumber of species NSP =',len(species_parameters))
     for species in range(len(species_parameters)):
         print('\nSpecies', species+1)
         for key in species_parameters[species].keys():
