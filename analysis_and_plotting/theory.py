@@ -30,21 +30,25 @@ def dispersion_relation(input_txt_parameters,species_parameters):
         omega_plasma_species[species]    = np.sqrt((n*q_species**2.)/(epsilon0*m_species))
     
     if InitialCondition=='Plasma_Oscillation':
-        # v0         = species_parameters[species]['v0']
-        v_sigma    = species_parameters[species]['v_sigma']        
-        T          = species_parameters[species]['T']   
+        v0         = species_parameters[0]['v0']
+        v_sigma    = species_parameters[0]['v_sigma']        
+        T          = species_parameters[0]['T']   
         
         omega_plasma=np.sqrt(np.sum(omega_plasma_species**2.))
-        # theoretical dispersion relation
-        if v_sigma==0:
-            theoretical_omega_of_k=omega_plasma*np.cos(0.5*dx*k)
-        else:
-            theoretical_omega_of_k=np.sqrt(omega_plasma**2+3*v_sigma**2*k**2)
         
+        # theoretical dispersion relation
+        theoretical_omega_of_k=[np.zeros_like(k),np.zeros_like(k)]
+        if v_sigma==0:
+            theoretical_omega_of_k[0]=k*v0+omega_plasma*np.cos(0.5*dx*k)
+            theoretical_omega_of_k[1]=k*v0-omega_plasma*np.cos(0.5*dx*k)
+        else:
+            theoretical_omega_of_k[0]=k*v0+np.sqrt(omega_plasma**2+3*v_sigma**2*k**2)
+            theoretical_omega_of_k[1]=k*v0-np.sqrt(omega_plasma**2+3*v_sigma**2*k**2)
+            
         # theoretical growth rate
         theoretical_growth_rate=np.zeros_like(k)
         
-    if InitialCondition=='Two_Stream_Instability':
+    elif InitialCondition=='Two_Stream_Instability':
         v0         = species_parameters[0]['v0']        # velocity
         # v0_sigma   = species_parameters[0]['v0_sigma']        # velocity width
         # charge     = parameters['charge']
@@ -59,15 +63,16 @@ def dispersion_relation(input_txt_parameters,species_parameters):
                 theoretical_growth_rate[mode]=np.sqrt(-k[mode]**2*v0**2-omega_plasma**2
                                                       +omega_plasma*np.sqrt(4.*k[mode]**2*v0**2
                                                                             +omega_plasma**2))
-                theoretical_omega_of_k[0][mode]=np.sqrt(k[mode]**2*v0**2+omega_plasma**2
-                                                        +omega_plasma*np.sqrt(4.*k[mode]**2*v0**2
-                                                                              +omega_plasma**2))
             else:
                 theoretical_omega_of_k[1][mode]=np.sqrt(k[mode]**2*v0**2+omega_plasma**2
                                                         -omega_plasma*np.sqrt(4.*k[mode]**2*v0**2
+                                                                              +omega_plasma**2))
+            theoretical_omega_of_k[0][mode]=np.sqrt(k[mode]**2*v0**2+omega_plasma**2
+                                                        +omega_plasma*np.sqrt(4.*k[mode]**2*v0**2
                                                                               +omega_plasma**2))
         
     else:
         theoretical_omega_of_k=np.zeros_like(k)
         theoretical_growth_rate=np.zeros_like(k)
+        
     return theoretical_omega_of_k,theoretical_growth_rate

@@ -101,10 +101,80 @@ def generate_units(UnitSystem):
 #         x=
 #     return n_grid, u_grid, P_grid, T_grid
 
+def energy(dx, NG, phi_grid, rho_grid, species_parameters, m, v, v_old,):
+    E_F, E_D, E_T = 0.0, 0.0, 0.0
+    # Field energy history
+    # E_F=0.5*np.dot(phi_grid,rho_grid)*dx
+    E_F=0.5*np.real(np.dot(np.fft.fft(phi_grid),
+                                 np.conjugate(np.fft.fft(rho_grid))))*dx/NG
+    # E_F[step]=0.5*epsilon0*np.dot(E_grid,E_grid)*dx
+    
+    # Particle drift and thermal energy histories
+    particle_counter=0
+    for species in range(len(species_parameters)):
+        N_species=species_parameters[species]['N']
+        m_species=species_parameters[species]['m']
+        avg_v_drift=np.mean(0.5*(v[particle_counter:particle_counter+N_species]
+                                  +v_old[particle_counter:particle_counter+N_species]))
+        E_D_species=N_species*0.5*m_species*avg_v_drift**2.
+        E_T_species=np.sum(0.5*m[particle_counter:particle_counter+N_species]\
+                          *v[particle_counter:particle_counter+N_species]
+                          *v_old[particle_counter:particle_counter+N_species])-E_D_species
+            
+        E_D+=E_D_species
+        E_T+=E_T_species
+        particle_counter+=N_species
+    
+    E_total = E_F + E_D + E_T
+    
+    return E_F, E_D, E_T, E_total
+
 # def mode_energy():
 #     return E
 
-# def calculate_omega_plasma(n_grid,species_parameters,input_txt_parameters):
+def plasma_parameters(input_txt_parameters,species_parameters, v):
+    '''
+    Calculate plasma frequency and Debye length for each species.
+
+    Parameters
+    ----------
+    input_txt_parameters : TYPE
+        DESCRIPTION.
+    species_parameters : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    omega_plasma_species : numpy.ndarray
+        np array of shape(NSP,), where the ith entry is the plasma frequency for the ith species.
+    lambda_Debye_species : numpy.ndarray
+        np array of shape(NSP,), where the ith entry is the Debye length for the ith species.
+
+    '''
+    epsilon0            = input_txt_parameters['epsilon0']        # vacuum permittivity
+    k_B                 = input_txt_parameters['k_B']
+    L                   = input_txt_parameters['L']        # length of box
+    
+    omega_plasma_species = np.zeros(len(species_parameters))
+    lambda_Debye_species = np.zeros(len(species_parameters))
+    
+    particle_counter = 0
+    for species in range(len(species_parameters)):
+        N_species = species_parameters[species]['N']
+        m_species = species_parameters[species]['m']
+        q_species = species_parameters[species]['q']
+        
+        n_species = N_species/L
+        T_species = m_species*np.std(v[particle_counter:particle_counter+N_species])/k_B
+        
+        omega_plasma_species[species] = np.sqrt((n_species*q_species**2.)/(epsilon0*m_species))
+        lambda_Debye_species[species] = np.sqrt((epsilon0*k_B*T_species)/(n_species*q_species**2.))
+        
+        particle_counter += N_species
+        
+    return omega_plasma_species, lambda_Debye_species
+
+# def calculate_omega_plasma_grid(n_grid,species_parameters,input_txt_parameters):
 #     omega_plasma_squared_sum=np.zeros(len(n_grid))
     
 #     for species in range(len(species_parameters)):
@@ -118,5 +188,5 @@ def generate_units(UnitSystem):
 #     omega_plasma_grid=np.sqrt(omega_plasma_squared_sum)
 #     return omega_plasma_grid
 
-# def calculate_lambda_Debye():
-#     return lambda_Debye
+# def calculate_lambda_Debye_grid():
+#     return lambda_Debye_grid

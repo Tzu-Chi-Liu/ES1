@@ -35,6 +35,7 @@ def load_input(input_folder_loc):
     
     input_files=[filename for filename in os.listdir(input_folder_loc) 
                  if os.path.isfile(os.path.join(input_folder_loc,filename))]
+    input_files=[filename for filename in input_files if filename[0]!='.'] # exclude hidden files
     input_files.sort()
     
     species_parameters=[]
@@ -111,9 +112,9 @@ def load_input(input_folder_loc):
 # Output
 # =============================================================================
 def output_to_file(step,t,N,m,q,r,v,NG,x_grid,rho_grid,phi_grid,E_grid,
-                InitialCondition,save_dir,units,output_decimal_places):
+                   InitialCondition,save_dir,units,output_decimal_places):
         
-    # Save m,q,r(t),v(t),phi(t),rho(t),E(t)
+    # Save m,q,r(t),v(t)
     particle_save_dir=save_dir+'/particle/'
     if not os.path.isdir(particle_save_dir):
             os.mkdir(particle_save_dir)
@@ -135,6 +136,7 @@ def output_to_file(step,t,N,m,q,r,v,NG,x_grid,rho_grid,phi_grid,E_grid,
                      +'%+.'+str(output_decimal_places)+'e'+'\n')
                     %(particle,m[particle],q[particle],r[particle],v[particle]))
         
+    # Save x_grid,phi(t),rho(t),E(t)
     field_save_dir=save_dir+'/field/'
     if not os.path.isdir(field_save_dir):
             os.mkdir(field_save_dir)
@@ -156,12 +158,20 @@ def output_to_file(step,t,N,m,q,r,v,NG,x_grid,rho_grid,phi_grid,E_grid,
                      +'%+.'+str(output_decimal_places)+'e'+'\n')
                     %(grid,x_grid[grid],rho_grid[grid],phi_grid[grid],E_grid[grid]))
             
+    # # Save P, P_abs, E_F, E_D, E_T histories
+    # history_save_filename=save_dir+'/histories'
+    # with open(history_save_filename,'w') as f:
+    #     f.write(('# ES1 histories\n'))
+    #     f.write(('# t'+''))
+    #     for step in range(len(t)):
+    #         f.write(('%6d '))
+            
 # =============================================================================
 # 
 # =============================================================================
 if __name__=='__main__':
     # input_folder_loc=sys.argv[1] # For running in terminal
-    input_folder_loc='simulation_results/EXAMPLE/inputs' # for running in IDE (ex:Spyder)
+    input_folder_loc='example_problems/Two_Stream_Instability/inputs' # for running in IDE (ex:Spyder)
     input_txt_parameters, save_dir, species_parameters = load_input(input_folder_loc)
     print('save_dir: ')
     print(save_dir)

@@ -64,9 +64,9 @@ def read_history(folder_loc):
 # 
 # =============================================================================
 if __name__=='__main__':
-    file_loc='../simulation_results/cold_plasma_oscillation/EXAMPLE/results/field/00000.txt'
-    # m,q,r,v=read_snapshot_output(file_loc)
-    x_grid,rho_grid,phi_grid,E_grid=read_snapshot(file_loc)
+    file_loc='/Users/mac/小皮球/school/NTU/physics department/computational physics/PIC/ES1/simulation_results/Two_Stream_Instability/Two_Stream_Instability/results/particle/00000.txt'
+    m,q,r,v=read_snapshot(file_loc)
+    # x_grid,rho_grid,phi_grid,E_grid=read_snapshot(file_loc)
     
     folder_loc='../simulation_results/cold_plasma_oscillation/EXAMPLE/results/field/'
     # R,V=read_history(folder_loc)

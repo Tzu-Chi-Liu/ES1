@@ -21,9 +21,9 @@ def energy_history_plot(t,E_D,E_T,E_F,units,tlim='default',Elim='default'):
         ax.set_ylim(Elim)
     ax.set_xlabel('Time t '+units['t'])
     ax.set_ylabel('Energy E '+units['Energy'])
-    ax.legend(loc='best')
-    # ax.legend(bbox_to_anchor=(0,1.01,1,0.2),loc='best'
-    #            ,mode='expand',borderaxespad=0.,ncol=4)
+    # ax.legend(bbox_to_anchor = (1.04, 1), loc='center left')
+    ax.legend(loc='lower left', bbox_to_anchor=(0.1,1.01,0.8,0.2)
+              ,mode='expand',borderaxespad=0.,ncol=4)
     ax.set_title('Energy History',y=1.07)
     
     return fig, ax
@@ -51,7 +51,8 @@ def grid_history_plot(x_grid,t,dx,DT,grid_history,units,
         
         pos=ax.imshow(grid_history,
                       extent=(t[0]-0.5*DT,t[-1]+0.5*DT,
-                              x_grid[0]-0.5*dx,x_grid[-1]+0.5*dx))
+                              x_grid[0]-0.5*dx,x_grid[-1]+0.5*dx),
+                      aspect='auto')
         
         if tlim != 'default':
             ax.set_xlim(tlim)
@@ -134,7 +135,9 @@ def all_modes_history_plot(k,t,dk,DT,grid_kt,units,
     if scale=='log':
         grid_kt=np.log10(2.*np.abs(grid_kt))
     
-    pos=ax.imshow(grid_kt,extent=(t[0]-0.5*DT,t[-1]+0.5*DT,k[1]-0.5*dk,k[-2]+0.5*dk))
+    pos=ax.imshow(grid_kt,
+                  extent=(t[0]-0.5*DT,t[-1]+0.5*DT,k[1]-0.5*dk,k[-2]+0.5*dk),
+                  aspect='auto')
         
     if tlim != 'default':
         ax.set_xlim(tlim)
@@ -156,13 +159,13 @@ def all_modes_history_plot(k,t,dk,DT,grid_kt,units,
     
     return fig, ax
 
-def tracker_particle_trajectory_plot(t,R,V,NTracker,units,
+def tracker_particle_trajectory_plot(t,R,V,Tracker_index,units,
                                      space=['R-t'],tlim='default',Rlim='default',Vlim='default'):
     fig=plt.figure()
     if 'R-t' in space:
         ax=fig.add_subplot(len(space),1,space.index('R-t')+1)
-        for particle in range(NTracker):
-            ax.plot(t,R[particle,:],label='Particle '+str(particle+1))
+        for particle in range(Tracker_index.shape[0]):
+            ax.plot(t,R[particle,:],label='Particle '+str(Tracker_index[particle]))
         
         if tlim != 'default':
             ax.set_xlim(tlim)
@@ -175,8 +178,8 @@ def tracker_particle_trajectory_plot(t,R,V,NTracker,units,
         
     if 'V-t' in space:
         ax=fig.add_subplot(len(space),1,space.index('V-t')+1)
-        for particle in range(NTracker):
-            ax.plot(t,V[particle,:],label='Particle '+str(particle+1))
+        for particle in range(Tracker_index.shape[0]):
+            ax.plot(t,V[particle,:],label='Particle '+str(Tracker_index[particle]))
         
         if tlim != 'default':
             ax.set_xlim(tlim)
@@ -189,8 +192,8 @@ def tracker_particle_trajectory_plot(t,R,V,NTracker,units,
         
     if 'R-V' in space:
         ax=fig.add_subplot(len(space),1,space.index('R-V')+1)
-        for particle in range(NTracker):
-            ax.plot(R[particle,:],V[particle,:],label='Particle '+str(particle+1))
+        for particle in range(Tracker_index.shape[0]):
+            ax.plot(R[particle,:],V[particle,:],label='Particle '+str(Tracker_index[particle]))
         
         if Rlim != 'default':
             ax.set_xlim(Rlim)
@@ -226,8 +229,10 @@ def dispersion_relation_plot(k,omega,dk,domega,grid_omegak,units,
     if scale=='log':
         grid_omegak=np.log10(2.*np.abs(grid_omegak))
         
-    pos=ax.imshow(grid_omegak,extent=(k[1]-0.5*dk,k[-2]+0.5*dk,
-                                      omega[0]-0.5*domega,omega[-1]+0.5*domega))
+    pos=ax.imshow(grid_omegak,
+                  extent=(k[1]-0.5*dk,k[-2]+0.5*dk,
+                          omega[0]-0.5*domega,omega[-1]+0.5*domega),
+                  aspect='auto')
     cbar=fig.colorbar(pos,ax=ax)
     
     # plot theoretical dispersion relation    
@@ -288,12 +293,12 @@ def distribution_function_grid_plot(X,V,distribution_function,projection,units):
     
     return fig, ax
 
-def grid_plot(x,grid,units):
+def grid_plot(x_grid,grid,units,ylabel,title):
     fig,ax=plt.subplots()
-    ax.plot(x,grid)
+    ax.plot(x_grid,grid)
     ax.set_xlabel('position x '+units['r'])
-    ax.set_ylabel(r' $\$ '+units[''])
-    ax.set_title('')
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
     return fig, ax
 
 def history_frequency_plot(omega,FFTspectrum,units):

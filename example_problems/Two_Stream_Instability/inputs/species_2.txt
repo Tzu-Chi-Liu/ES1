@@ -1,0 +1,17 @@
+# =============================================================================
+# Species 2
+# =============================================================================
+N                   = 128       # Number of particles 
+m                   = 'm_e'
+q                   = '-e'
+
+# distribution      = 'Maxwellian' # Used for choosing different initial velocity distribution function
+v0                  = -1.0
+v_sigma             = 0.0        # Velocity width (v0_sigma**2 ~ Temperature)
+T                   = 0.0        # Temperature for a Maxwellian velocity distribution
+
+Modes               = [1]     # Excited modes (seperate by comma or i:j:k for modes = list(range(i,j,k)))
+X1                  = 0.001
+V1                  = 0.0
+THETAX              = 0.0
+THETAV              = 0.0

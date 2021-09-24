@@ -75,6 +75,7 @@ def weightField(r,E_grid,IW,NG,dx):
 # integration of EOM
 # =============================================================================
 def update_motion(m,q,r,v,E_par,scheme,IW,DT,L,E_grid,step):
+    # Update position r and velocity v for a single particle using E_par at particle position
     a=q*E_par/m
     
     if scheme=='leapfrog':

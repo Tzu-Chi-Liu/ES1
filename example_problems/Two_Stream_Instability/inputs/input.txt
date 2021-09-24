@@ -1,0 +1,106 @@
+# =============================================================================
+# Unit system
+# =============================================================================
+UnitSystem          = 'arb. units'
+
+# =============================================================================
+# Physical constants
+# =============================================================================
+e                   = 0.04908738521234052       # Elementary charge
+epsilon0            = 1.0        # Vacuum permittivity
+m_e                 = 0.04908738521234052        # Electron mass
+m_p                 = 2000.0     # Proton mass
+k_B                 = 1.0        # Boltzmann's constant
+
+# =============================================================================
+# Boundary & initial (physical) conditions
+# =============================================================================
+L                   = 6.283185307179586        # Length of box
+NT                  = 300       # Total simulation steps
+
+InitialCondition    = 'Two_Stream_Instability'
+
+# =============================================================================
+# Simulation (unphysical) parameters
+# =============================================================================
+NG                  = 32        # Number of grids
+DT                  = 0.2       # Time step
+
+IW                  = 2
+scheme              = 'leapfrog'
+solver              = 'FFT'
+
+# =============================================================================
+# Analysis parameters
+# =============================================================================
+NTracker            = 1          # Number of tracker particles
+
+# =============================================================================
+# Output file settings
+# =============================================================================
+# .txt output files
+save_output                      = False          # Save output to txt file
+output_Ndecimal_places           = 8
+
+# output plots
+save_animation                   = False     # save animation of snapshots
+save_energy_history              = 0          # save history
+save_momentum_change_history     = 0
+save_grid_history                = 0
+save_selected_modes_history      = False
+save_all_modes_history           = 0
+save_tracker_particle_trajectory = 0
+save_omegak                      = 0          # save dispersion relation
+
+# =============================================================================
+# Plotting settings
+# =============================================================================
+# snapshot animations
+plot_animation                       = 0          # Plot animation of snapshots
+
+# energy-time history 
+plot_energy_history                  = 1          # Plot history
+energy_history_tlim                  = 'default'      # Separate by comma
+energy_history_Elim                  = 'default'
+
+# momentum_change-time history 
+plot_momentum_change_history         = 1          # Plot history
+momentum_change_history_tlim         = 'default'     # Separate by comma
+momentum_change_history_Plim         = 'default'
+
+# grid history 
+plot_grid_history                    = 1          # Plot history
+grid_history_projection              = '2d'
+grid_history_xlim                    = 'default'      # Separate by comma
+grid_history_tlim                    = 'default'
+
+# selected_mode history 
+plot_selected_modes_history          = 1          # Plot history
+selected_modes                       = [1,2,3,5]   # plot field(k,t)
+plot_theoretical_growth_rate         = 1
+selected_modes_part                  = 'abs'
+selected_modes_scale                 = 'log'
+selected_mode_history_tlim           = 'default'      # Separate by comma
+selected_mode_history_Alim           = 'default'
+
+# all_modes history 
+plot_all_modes_history               = 1          # Plot history
+all_modes_part                       = 'abs'
+all_modes_scale                      = 'linear'
+all_mode_history_tlim                = 'default'      # Separate by comma
+all_mode_history_klim                = 'default'
+
+# tracker_particle_trajectory_history
+plot_tracker_particle_trajectory     = 1          # Plot trajectory of tracker particle(s)
+tracker_particle_trajectory_space    = ('R-t','V-t','R-V')  # Choose to plot 'R-t', 'V-t', 'R-V' 
+tracker_particle_trajectory_tlim     = 'default'
+tracker_particle_trajectory_Rlim     = 'default'
+tracker_particle_trajectory_Vlim     = 'default'
+
+# dispersion relation
+plot_omegak                          = 1          # Plot dispersion relation
+plot_theoretical_dispersion_relation = 1
+dispersion_relation_part             = 'abs'
+dispersion_relation_scale            = 'linear'
+dispersion_relation_klim             = 'default'      # Separate by comma
+dispersion_relation_omegalim         = 'default'
