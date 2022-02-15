@@ -108,15 +108,34 @@ def load_particles(input_txt_parameters,species_parameters):
 if __name__=='__main__':
     import input_output 
     # input_folder_loc=sys.argv[1] # For running in terminal
-    input_folder_loc='simulation_results/Two_Stream_Instability/Two_Stream_Instability/inputs' # for running in IDE (ex:Spyder)
+    input_folder_loc='simulation_results/Numeric_Instability/Single_Cold_Stream/untitled folder 4/inputs' # for running in IDE (ex:Spyder)
     input_txt_parameters, save_dir, species_parameters = input_output.load_input(input_folder_loc)
     
     m,q,r,v=load_particles(input_txt_parameters,species_parameters)
+    
+    import PIC_functions
+    N = len(m) # Total number of particles
+    epsilon0            = input_txt_parameters['epsilon0']  
+    L                   = input_txt_parameters['L']      
+    NG                  = input_txt_parameters['NG']    
+    dx                  = L/NG # grid spacing
+    IW                  = input_txt_parameters['IW']
+    rho_grid = PIC_functions.weightrho(r, q, IW, N, NG, dx)
+    phi_grid, E_grid = PIC_functions.solve_poisson(rho_grid, NG, dx, epsilon0,
+                                               solver='FFT', operator='local')
     
     from analysis_and_plotting import analysis
     UnitSystem          = input_txt_parameters['UnitSystem']
     units=analysis.generate_units(UnitSystem)
     
     from analysis_and_plotting import plotting
+    x_grid              = np.arange(0., L, dx) # np array for x axis
     plotting.phase_space_plot(species_parameters,r,v,units)
+    plotting.grid_plot(x_grid,rho_grid,units,'density (arb. units)', 'density')
+    plotting.grid_plot(x_grid,phi_grid,units,'potential (arb. units)', 'potential')
+    plotting.grid_plot(x_grid,E_grid,units,'field (arb. units)', 'field')
+    
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.plot(np.abs(np.fft.rfft(phi_grid)))
     

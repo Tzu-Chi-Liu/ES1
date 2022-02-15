@@ -78,17 +78,17 @@ def generate_units(UnitSystem):
         
     if UnitSystem=='Normalized':
         units['t']='(1/ω_p)'
-        units['m']='(kg)'
-        units['q']='(C)'
+        units['m']='(m_e)'
+        units['q']='(e)'
         units['r']='(c/ω_p)'
         units['v']='(c)'
         units['rho_grid']='(C*ω_p/c)'
-        units['phi_grid']='(V)'
-        units['E_grid']='(V*ω_p/c)'
+        units['phi_grid']='(m_e*c^2/e)'
+        units['E_grid']='(m_e*c*ω_p/e)'
         units['k']='(ω_p/c)'
         units['omega']='(ω_p)'
-        units['Momentum']='(kg*c)'
-        units['Energy']='(J)'
+        units['Momentum']='(m_e*c)'
+        units['Energy']='(m_e*c^2)'
         
     return units
 
@@ -132,7 +132,7 @@ def energy(dx, NG, phi_grid, rho_grid, species_parameters, m, v, v_old,):
 # def mode_energy():
 #     return E
 
-def plasma_parameters(input_txt_parameters,species_parameters, v):
+def plasma_parameters(input_txt_parameters,species_parameters, v, v_old):
     '''
     Calculate plasma frequency and Debye length for each species.
 
@@ -165,7 +165,10 @@ def plasma_parameters(input_txt_parameters,species_parameters, v):
         q_species = species_parameters[species]['q']
         
         n_species = N_species/L
-        T_species = m_species*np.std(v[particle_counter:particle_counter+N_species])/k_B
+        T_species = m_species\
+                    *np.std(0.5*(v[particle_counter:particle_counter+N_species]\
+                                 +v_old[particle_counter:particle_counter+N_species]))\
+                    /k_B
         
         omega_plasma_species[species] = np.sqrt((n_species*q_species**2.)/(epsilon0*m_species))
         lambda_Debye_species[species] = np.sqrt((epsilon0*k_B*T_species)/(n_species*q_species**2.))

@@ -18,12 +18,10 @@ def read_snapshot(file_loc):
     data=np.loadtxt(file_loc)
     
     if 'particle' in file_loc:
-        m = data[:,1]
-        q = data[:,2]
-        r = data[:,3]
-        v = data[:,4]
+        r = data[:,1]
+        v = data[:,2]
         
-        return m,q,r,v
+        return r,v
         
     elif 'field' in file_loc:
         x_grid   = data[:,1]
@@ -65,7 +63,7 @@ def read_history(folder_loc):
 # =============================================================================
 if __name__=='__main__':
     file_loc='/Users/mac/小皮球/school/NTU/physics department/computational physics/PIC/ES1/simulation_results/Two_Stream_Instability/Two_Stream_Instability/results/particle/00000.txt'
-    m,q,r,v=read_snapshot(file_loc)
+    r,v=read_snapshot(file_loc)
     # x_grid,rho_grid,phi_grid,E_grid=read_snapshot(file_loc)
     
     folder_loc='../simulation_results/cold_plasma_oscillation/EXAMPLE/results/field/'

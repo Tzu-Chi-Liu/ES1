@@ -15,7 +15,7 @@ from analysis_and_plotting import plotting
 # Load input file into parameters dict & save to same dir as input file
 # =============================================================================
 # input_folder_loc = sys.argv[1] # For running in terminal
-input_folder_loc = 'simulation_results/Two_Stream_Instability/Two_Stream_Instability/inputs' # for running in IDE (ex:Spyder)
+input_folder_loc = 'simulation_results/Numeric_Instability/Single_Cold_Stream/untitled folder 2/inputs' # for running in IDE (ex:Spyder)
 input_txt_parameters, save_dir, species_parameters = input_output.load_input(input_folder_loc)
 
 # =============================================================================
@@ -113,13 +113,13 @@ N = len(m) # Total number of particles
 # =============================================================================
 dx                  = L/NG # grid spacing
 x_grid              = np.arange(0., L, dx) # np array for x axis
-t                   = np.arange(0., NT*DT, DT) # np array for time axis
+t                   = np.linspace(0., NT*DT, NT+1, endpoint=True) # np array for time axis
 
 # =============================================================================
 # Plasma parameters
 # =============================================================================
 omega_plasma_species, lambda_Debye_species = analysis.plasma_parameters(input_txt_parameters,
-                                                                        species_parameters, v)
+                                                                        species_parameters, v, v)
 
 print('In the %d species: '%len(species_parameters))
 print(('Highest plasma frequency ω_p = %.4f' + units['omega'] + ', ω_p*DT = %.4f')
@@ -149,6 +149,8 @@ rho_grid_history = np.zeros((NG, len(t)))
 phi_grid_history = np.zeros((NG, len(t)))
 E_grid_history   = np.zeros((NG, len(t)))
             
+omega_plasma_history = np.zeros((len(species_parameters), len(t)))
+lambda_debye_history = np.zeros((len(species_parameters), len(t)))
 # =============================================================================
 # main simulation loop
 # =============================================================================
@@ -169,25 +171,33 @@ for step in range(len(t)):
         r[i],v[i]=PIC_functions.update_motion(m[i], q[i], r[i], v[i], E_par,
                                               scheme, IW, DT, L, E_grid, step)
         
+    # Energy histories
+    E_F[step], E_D[step], E_T[step], E_total[step] = analysis.energy(dx, NG, phi_grid, rho_grid, 
+                                                                     species_parameters, 
+                                                                     m, v, v_old)
+        
+
     # tracker particle trajectory & histories
     for i in range(len(Tracker_index)):
         R[i, step] = r[Tracker_index[i]]
-        V[i, step] = v[Tracker_index[i]]
+        V[i, step] = 0.5*(v[Tracker_index[i]]+v_old[Tracker_index[i]])
         
     # Total momentum history
     P[step] = np.sum(m*0.5*(v_old+v))
     P_abs[step] = np.sum(m*0.5*np.abs(v_old+v))
     
-    # Energy histories
-    E_F[step], E_D[step], E_T[step], E_total[step] = analysis.energy(dx, NG, phi_grid, rho_grid, 
-                                                                     species_parameters, 
-                                                                     m, v, v_old)
-    
     # Record grid histories
     rho_grid_history[:, step] = rho_grid
     phi_grid_history[:, step] = phi_grid
     E_grid_history[:, step]   = E_grid
-        
+    
+    # Record plasma parameters histories for each species
+    omega_plasma, lambda_debye = analysis.plasma_parameters(input_txt_parameters, 
+                                                            species_parameters,
+                                                            v, v_old) 
+    omega_plasma_history[:, step] = omega_plasma
+    lambda_debye_history[:, step] = lambda_debye
+    
     # Plot snapshot animation during simulation
     if plot_animation:
         NSP=2
@@ -195,12 +205,14 @@ for step in range(len(t)):
         animation.diagnostics_animation(t,NSP,N,r,0.5*(v_old+v),
                                         NG,x_grid,rho_grid,phi_grid,E_grid,
                                         step,units,pause_time,save_dir)
-    
+        
     # save output
     if save_output:
-        input_output.output_to_file(step,t,N,m,q,r,v,NG,x_grid,rho_grid,phi_grid,E_grid,
+        input_output.output_to_file(step,t,N,m,q,r,0.5*(v+v_old),
+                                    NG,x_grid,rho_grid,phi_grid,E_grid,
                                     InitialCondition,save_dir,units,output_Ndecimal_places)
     
+    # print current step, total momentum and total energy
     print(('step = %d '+units['t']
            +', P = %+.3e'+units['Momentum']
            +', E = %+.3e'+units['Energy'])
@@ -231,18 +243,24 @@ grid_omegak=analysis.grid_xt_to_omegak(k,E_grid_history)
 if plot_energy_history:
     fig1=plotting.energy_history_plot(t,E_D,E_T,E_F,units,
                                       tlim=energy_history_tlim,Elim=energy_history_Elim)
+    if save_energy_history:
+        fig1[0].savefig(save_dir+'/energy_history.pdf')
 
 # momentum_change-time history 
 if plot_momentum_change_history:
     fig2=plotting.momentum_change_history_plot(t, (P-P[0])/P_abs, units,
                                                tlim=momentum_change_history_tlim,
                                                Plim=momentum_change_history_Plim)
+    if save_momentum_change_history:
+        fig2[0].savefig(save_dir+'/momentum_change_history.pdf')
 
 # grid history 
 if plot_grid_history:
     fig3=plotting.grid_history_plot(x_grid, t, dx, DT, E_grid_history, 
                                     units,projection=grid_history_projection,
                                     xlim=grid_history_xlim,tlim=grid_history_tlim)
+    if save_grid_history:
+        fig3[0].savefig(save_dir+'/grid_history.pdf')
     
 # selected_mode history 
 if plot_selected_modes_history:
@@ -253,6 +271,8 @@ if plot_selected_modes_history:
                                               scale=selected_modes_scale,
                                               tlim=selected_mode_history_tlim,
                                               Alim=selected_mode_history_Alim)
+    if save_selected_modes_history:
+        fig4[0].savefig(save_dir+'/selected_modes_history.pdf')
 
 # all_modes history 
 if plot_all_modes_history:
@@ -260,6 +280,8 @@ if plot_all_modes_history:
                                          part=all_modes_part,scale=all_modes_scale,
                                          tlim=all_mode_history_tlim,
                                          klim=all_mode_history_klim)
+    if save_all_modes_history:
+        fig5[0].savefig(save_dir+'/all_modes_history.pdf')
     
 # tracker_particle_trajectory_history
 if plot_tracker_particle_trajectory:
@@ -268,7 +290,9 @@ if plot_tracker_particle_trajectory:
                                                    tlim=tracker_particle_trajectory_tlim,
                                                    Rlim=tracker_particle_trajectory_Rlim,
                                                    Vlim=tracker_particle_trajectory_Vlim)
-    
+    if save_tracker_particle_trajectory:
+        fig6[0].savefig(save_dir+'/tracker_trajectory.pdf')
+        
 # dispersion relation
 if plot_omegak:
     fig7=plotting.dispersion_relation_plot(k, omega, dk, domega, 
@@ -279,5 +303,7 @@ if plot_omegak:
                                            scale=dispersion_relation_scale,
                                            klim=dispersion_relation_klim,
                                            omegalim=dispersion_relation_omegalim)
+    if save_omegak:
+        fig7[0].savefig(save_dir+'/dispersion_relation.pdf')
 
 plt.show()

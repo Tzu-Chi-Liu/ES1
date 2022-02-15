@@ -6,11 +6,10 @@ UnitSystem          = 'arb. units'
 # =============================================================================
 # Physical constants
 # =============================================================================
-e                   = 0.04908738521234052       # Elementary charge
-epsilon0            = 1.0        # Vacuum permittivity
-m_e                 = 0.04908738521234052       # Electron mass
-m_p                 = 2000.0     # Proton mass
-k_B                 = 1.0        # Boltzmann's constant
+e                   = 1.0       # Elementary charge
+m_e                 = 1.0       # Electron mass
+epsilon0            = 1.0       # Vacuum permittivity
+c                   = 1.0
 
 # =============================================================================
 # Boundary & initial (physical) conditions
